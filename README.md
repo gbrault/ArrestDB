@@ -1,3 +1,7 @@
+#CKeditor Widget
+
+just added a widget to see the results of ArrestDB queries and make them WYSIWYG: a work in progress
+
 #ArrestDB
 
 ArrestDB is a "plug-n-play" RESTful API for SQLite, MySQL and PostgreSQL databases.
