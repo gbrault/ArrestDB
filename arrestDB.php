@@ -1,6 +1,6 @@
 <?php
 
-$dsn = 'sqlite://c:/wamp64/www/Sqlite/Northwind.sl3';
+$dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sl3';
 $clients = [];
 
 /**
@@ -387,7 +387,7 @@ class ArrestDB
 
 	public static function Query($query = null)
 	{
-		static $db = null;
+		static $db = null;		
 		static $result = [];
 
 		try
