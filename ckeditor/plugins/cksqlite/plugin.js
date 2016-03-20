@@ -11,7 +11,7 @@
 // Register the plugin within the editor.
 CKEDITOR.plugins.add( 'cksqlite', {
 	// This plugin requires the Widgets System defined in the 'widget' and the 'ajax' plugins.
-	requires: 'widget,ajax',
+	requires: 'widget,restajax',
 
 	// Register the icon used for the toolbar button. It must be the same
 	// as the name of the widget.
@@ -117,8 +117,8 @@ CKEDITOR.plugins.add( 'cksqlite', {
 				// SQL data
 				// get the restSqlUrl data, creat the ajax request and feed the result in the content field
 				if((this.data.restSqlUrl!=undefined) &&(this.data.restSqlUrl!="")){
-					var url="/Sqlite/ArrestDB.php"+this.data.restSqlUrl;
-					var sqlData = CKEDITOR.ajax.load(url);
+					var url="/ArrestDB/ArrestDB.php"+this.data.restSqlUrl;
+					var sqlData = CKEDITOR.restajax.load(url);
 					this.editables.content.setText(sqlData);
 					this.editables.title.setText(this.data.restSqlUrl);			
 				}
