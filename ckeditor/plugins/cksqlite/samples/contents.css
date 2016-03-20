@@ -10,7 +10,7 @@ Licensed under the terms of the MIT License (see LICENSE.md).
 	border: 1px solid #ddd;
 	box-shadow: 0 1px 1px #fff inset, 0 -1px 0px #ccc inset;
 }
-.cksqlite-title, .cksqlite-content {
+.cksqlite-title, .cksqlite-format, .cksqlite-content {
 	box-shadow: 0 1px 1px #ddd inset;
 	border: 1px solid #cccccc;
 	border-radius: 5px;
@@ -20,7 +20,7 @@ Licensed under the terms of the MIT License (see LICENSE.md).
 	margin: 0 0 8px;
 	padding: 5px 8px;
 }
-.cksqlite-content {
+.cksqlite-content, .cksqlite-format {
 	padding: 0 8px;
 }
 .cksqlite.align-right {

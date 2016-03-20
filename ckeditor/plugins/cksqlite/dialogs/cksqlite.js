@@ -58,8 +58,21 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 							this.setValue( widget.data.restSqlUrl );
 						},
 						commit: function( widget ) {
+							// persist into DOM?
 							widget.element.setAttribute('title',this.getValue());
 							widget.setData( 'restSqlUrl', this.getValue() );
+						}
+					},
+					{
+						id: 'resetFormat',
+						type: 'checkbox',
+						label: 'Reset Format',
+						width: '10px',
+						setup: function( widget ) {
+							this.setValue( widget.data.resetFormat );
+						},
+						commit: function( widget ) {
+							widget.setData( 'resetFormat', this.getValue() );
 						}
 					}
 				]

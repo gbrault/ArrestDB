@@ -23,7 +23,7 @@ document.onreadystatechange = function () {
 
 		CKEDITOR.replace( 'editor1', {
 			// Load the cksqlite plugin.
-			extraPlugins: 'cksqlite,ArrestDBsave',
+			extraPlugins: 'cksqlite,ArrestDBcmd',
 
 			// Besides editor's main stylesheet load also cksqlite styles.
 			// In the usual case they can be added to the main stylesheet.
@@ -61,9 +61,11 @@ document.onreadystatechange = function () {
      			if(!doc.hasOwnProperty("error")){   			
      				CKEDITOR.instances.editor1.setData(doc[0].content,{noSnapshot:true});     				
      			} else {
+     				if (window.confirm(docref+" Does not exist; Do you want to create it?")){
      				// code 204 = no content with this name => create it!
-     				doc = CKEDITOR.restajax.postjson("/ArrestDB/ArrestDB.php/Documents/"
+     					doc = CKEDITOR.restajax.postjson("/ArrestDB/ArrestDB.php/Documents/"
      													,{name:docref,content:""});
+     				}
      			}
      		}
 		});
