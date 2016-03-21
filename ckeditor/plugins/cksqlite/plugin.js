@@ -81,11 +81,33 @@ CKEDITOR.plugins.add('cksqlite', {
                 // for all <div> elements with a "cksqlite" class.
                 return element.name == 'div' && element.hasClass('cksqlite');
             },
-
+            /* get called before the edit dialog is open
+            edit: function(evt){
+                
+            },
+            */          
             // When a widget is being initialized, we need to read the data (restSqlUrl)
             // from DOM and set it by using the widget.setData() method.
             // More code which needs to be executed when DOM is available may go here.
             init: function() {
+               /*  events possible subscription
+                        this.on('deselect',function(){
+                             alert("deselect");       
+                        });
+                        this.on('select',function(){
+                             alert("select");       
+                        });
+               */
+                        this.on('customchange',function(){
+                             alert("cunstom change");       
+                        });
+
+             
+                // set the editables mode
+                this.editables.title.setAttribute("contenteditable",false);
+                this.editables.title.unselectable();
+                this.editables.content.setAttribute("contenteditable",false);
+                this.editables.content.unselectable();
                 // SQL parameters 
                 // check if set as data
                 var restSqlUrl = this.element.data('restSqlUrl');
@@ -123,7 +145,8 @@ CKEDITOR.plugins.add('cksqlite', {
                         this.setData('resetFormat', false);
                     }
                     this.editables.content.setText(JSON.stringify(this.formatData(sqlData)));
-                    this.editables.title.setText(this.data.restSqlUrl);
+                    this.editables.title.setText(this.data.restSqlUrl); 
+                    this.fire("customchange",JSON.stringify(sqlData), this.editor );                  
                 }
                 // other data
                 // Check whether "width" widget data is set and remove or set "width" CSS style.
