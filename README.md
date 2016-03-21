@@ -3,6 +3,7 @@
 just added a widget to see the results of ArrestDB queries and make them WYSIWYG: a work in progress
 * Download as a zip
 * put the directory in a wamp or lamp root directory
+* fix the Northwind.sl3 path in ArrestDB.php
 * http://&lt;localhost:8080&gt;/ArrestDB
 
 #ArrestDB
