@@ -302,7 +302,7 @@
 			 * @returns {Object} The loaded data. For asynchronous requests, an
 			 * empty string. For invalid requests, `null`.
 			 */
-			getjson(url, callback){
+			getjson: function(url, callback){
 				return getjson(url, callback, getResponseJson);
 			},
 			/**
