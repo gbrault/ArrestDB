@@ -23,7 +23,7 @@ document.onreadystatechange = function () {
 
 		CKEDITOR.replace( 'editor1', {
 			// Load the cksqlite plugin.
-			extraPlugins: 'cksqlite,ArrestDBcmd',
+			extraPlugins: 'cksqlite,ArrestDBcmd,pagebreak,sourcedialog,codemirror,preview',
 
 			// Besides editor's main stylesheet load also cksqlite styles.
 			// In the usual case they can be added to the main stylesheet.
@@ -48,7 +48,7 @@ document.onreadystatechange = function () {
 				{ name: 'styles' },
 				{ name: 'about' }
 			],
-			removePlugins: 'font,iframe,pagebreak,flash,stylescombo,print,preview,smiley,pastetext,pastefromword'
+			removePlugins: 'font,iframe,flash,stylescombo,print,smiley,pastetext,pastefromword'
 		} );
 
 		CKEDITOR.instances.editor1.on("instanceReady", function(event)
