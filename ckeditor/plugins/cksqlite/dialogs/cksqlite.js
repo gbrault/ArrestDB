@@ -12,7 +12,7 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 	return {
 		title: 'Sqlite Query Editor',
 		minWidth: 200,
-		minHeight: 100,
+		minHeight: 150,
 		contents: [
 			{
 				id: 'info',
@@ -59,8 +59,26 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 						},
 						commit: function( widget ) {
 							// persist into DOM?
-							widget.element.setAttribute('title',this.getValue());
+							widget.editables.select.setAttribute('data-select',this.getValue());
 							widget.setData( 'restSqlUrl', this.getValue() );
+						}
+					},
+					{
+						id: 'type',
+						type: 'radio',
+						label: 'Type',
+						items: [
+							[ 'horizontal', 'horizontal' ],
+							[ 'vertical', 'vertical' ],
+						],
+						'default':'horizontal',
+						// When setting up this field, set its value to the "type" value from widget data.
+						setup: function( widget ) {
+							this.setValue( widget.data.type );
+						},
+						// When committing (saving) this field, set its value to the widget data.
+						commit: function( widget ) {
+							widget.setData( 'type', this.getValue() );
 						}
 					},
 					{
@@ -74,7 +92,31 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 						commit: function( widget ) {
 							widget.setData( 'resetFormat', this.getValue() );
 						}
-					}
+					},					
+					{
+						id: 'resetTemplate',
+						type: 'checkbox',
+						label: 'Reset Template',
+						width: '10px',
+						setup: function( widget ) {
+							this.setValue( widget.data.resetTemplate );
+						},
+						commit: function( widget ) {
+							widget.setData( 'resetTemplate', this.getValue() );
+						}
+					},
+					{
+						id: 'rendered',
+						type: 'checkbox',
+						label: 'Rendered',
+						width: '10px',
+						setup: function( widget ) {
+							this.setValue( widget.data.rendered );
+						},
+						commit: function( widget ) {
+							widget.setData( 'rendered', this.getValue() );
+						}
+					}										
 				]
 			}
 		]

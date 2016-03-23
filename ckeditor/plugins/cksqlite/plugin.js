@@ -8,33 +8,33 @@
 CKEDITOR.plugins.add('cksqlite', {
     // This plugin requires the Widgets System defined in the 'widget' and the 'ajax' plugins.
     requires: 'widget,restajax',
-
+    
     // Register the icon used for the toolbar button. It must be the same
     // as the name of the widget.
     icons: 'cksqlite',
-
+    
     // The plugin initialization logic goes inside this method.
     init: function(editor) {
         // Register the editing dialog.
         CKEDITOR.dialog.add('cksqlite', this.path + 'dialogs/cksqlite.js');
-
+        
         // Register the cksqlite widget.
         editor.widgets.add('cksqlite', {
             // Allow all HTML elements, classes, and styles that this widget requires.
             // Read more about the Advanced Content Filter here:
             // * http://docs.ckeditor.com/#!/guide/dev_advanced_content_filter
             // * http://docs.ckeditor.com/#!/guide/plugin_sdk_integration_with_acf
-            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!title]{width};' +
-                'div(!cksqlite-content); h2(!cksqlite-title); div(!cksqlite-format)',
-
+            allowedContent: 'div(!cksqlite,align-left,align-right,align-center){width};' + 
+            'h2(!cksqlite-select)[!data-select,title]; div(!cksqlite-content,title); div(!cksqlite-template,title); div(!cksqlite-format,title)',
+            
             // Minimum HTML which is required by this widget to work.
             requiredContent: 'div(cksqlite)',
-
+            
             // Define a nested editable area.
             editables: {
-                title: {
+                select: {
                     // Define CSS selector used for finding the element inside widget element.
-                    selector: '.cksqlite-title',
+                    selector: '.cksqlite-select',
                     // Define content allowed in this nested editable. Its content will be
                     // filtered accordingly and the toolbar will be adjusted when this editable
                     // is focused.
@@ -44,20 +44,30 @@ CKEDITOR.plugins.add('cksqlite', {
                     selector: '.cksqlite-format',
                     allowedContent: 'p'
                 },
+                template: {
+                    selector: '.cksqlite-template',
+                    allowedContent: 'p'
+                },
                 content: {
                     selector: '.cksqlite-content',
                     allowedContent: 'p br ul ol li strong em'
+                },
+                rendered: {
+                    selector:  '.cksqlite-rendered',
+                    allowedContent: 'tr td p b br ul li ol strong em i;'+'table[csqlite-render]'   
                 }
             },
-
+            
             // Define the template of a new Sqlite widget.
             // The template will be used when creating new instances of the Simple Box widget.
-            template: '<div class="cksqlite">' +
-                '<h2 class="cksqlite-title">Title</h2>' +
-                '<div class="cksqlite-format"><p>Format...</p></div>' +
-                '<div class="cksqlite-content"><p>Content...</p></div>' +
-                '</div>',
-
+            template: '<div class="cksqlite" title="Arrest DB Widget">' + 
+            '<h2 class="cksqlite-select" title="Arrest DB select">ArrestDB select</h2>' + 
+            '<div class="cksqlite-format" title="Format"><p>Format...</p></div>' + 
+            '<div class="cksqlite-template" title="Template"><p>Template...</p></div>' + 
+            '<div class="cksqlite-content" title="Filtered Data"><p>Content...</p></div>' + 
+            '<div class="cksqlite-rendered" title="rendered Data"><p>Content...</p></div>' + 
+            '</div>',
+            
             // Define the label for a widget toolbar button which will be automatically
             // created by the Widgets System. This button will insert a new widget instance
             // created from the template defined above, or will edit selected widget
@@ -66,11 +76,11 @@ CKEDITOR.plugins.add('cksqlite', {
             // Note: In order to be able to translate your widget you should use the
             // editor.lang.cksqlite.* property. A string was used directly here to simplify this tutorial.
             button: 'Sqlite Query Editor',
-
+            
             // Set the widget dialog window name. This enables the automatic widget-dialog binding.
             // This dialog window will be opened when creating a new widget or editing an existing one.
             dialog: 'cksqlite',
-
+            
             // Check the elements that need to be converted to widgets.
             //
             // Note: The "element" argument is an instance of http://docs.ckeditor.com/#!/api/CKEDITOR.htmlParser.element
@@ -85,12 +95,12 @@ CKEDITOR.plugins.add('cksqlite', {
             edit: function(evt){
                 
             },
-            */          
+            */
             // When a widget is being initialized, we need to read the data (restSqlUrl)
             // from DOM and set it by using the widget.setData() method.
             // More code which needs to be executed when DOM is available may go here.
             init: function() {
-               /*  events possible subscription
+                /*  events possible subscription
                         this.on('deselect',function(){
                              alert("deselect");       
                         });
@@ -98,22 +108,22 @@ CKEDITOR.plugins.add('cksqlite', {
                              alert("select");       
                         });
                */
-                        this.on('customchange',function(){
-                             alert("cunstom change");       
-                        });
-
-             
+                this.on('customchange', function() {
+                    alert("custom change");
+                });
+                
+                
                 // set the editables mode
-                this.editables.title.setAttribute("contenteditable",false);
-                this.editables.title.unselectable();
-                this.editables.content.setAttribute("contenteditable",false);
+                this.editables.select.setAttribute("contenteditable", false);
+                this.editables.select.unselectable();
+                this.editables.content.setAttribute("contenteditable", false);
                 this.editables.content.unselectable();
                 // SQL parameters 
                 // check if set as data
                 var restSqlUrl = this.element.data('restSqlUrl');
-                if ((restSqlUrl == undefined) || restSqlUrl == null || (restSqlUrl == "")) {
-                    // get the DOM value (persisted into Title as I don't know how to get a custom attribute...')
-                    var domRestSqlUrl = this.element.getAttribute("title");
+                if ((restSqlUrl == undefined) || restSqlUrl == null  || (restSqlUrl == "")) {
+                    // get the DOM value (persisted into data-select attribute...')
+                    var domRestSqlUrl = this.editables.select.getAttribute("data-select");
                     if ((domRestSqlUrl != undefined) && (domRestSqlUrl != "")) {
                         this.setData('restSqlUrl', domRestSqlUrl);
                     }
@@ -122,7 +132,7 @@ CKEDITOR.plugins.add('cksqlite', {
                 var width = this.element.getStyle('width');
                 if (width)
                     this.setData('width', width);
-
+                
                 if (this.element.hasClass('align-left'))
                     this.setData('align', 'left');
                 if (this.element.hasClass('align-right'))
@@ -130,7 +140,7 @@ CKEDITOR.plugins.add('cksqlite', {
                 if (this.element.hasClass('align-center'))
                     this.setData('align', 'center');
             },
-
+            
             // Listen on the widget#data event which is fired every time the widget data changes
             // and updates the widget's view.
             // Data may be changed by using the widget.setData() method, used in the widget dialog window.			
@@ -142,11 +152,22 @@ CKEDITOR.plugins.add('cksqlite', {
                     var sqlData = CKEDITOR.restajax.getjson(url);
                     if (this.data.resetFormat == true) {
                         this.editables.format.setText(this.resetFormat(sqlData));
+                        this.editables.template.setText(this.resetTemplate());
                         this.setData('resetFormat', false);
                     }
+                    if (this.data.resetTemplate == true) {                    
+                        this.editables.template.setText(this.resetTemplate());
+                        this.setData('resetTemplate', false);
+                    }
                     this.editables.content.setText(JSON.stringify(this.formatData(sqlData)));
-                    this.editables.title.setText(this.data.restSqlUrl); 
-                    this.fire("customchange",JSON.stringify(sqlData), this.editor );                  
+                    this.editables.select.setText(this.data.restSqlUrl);
+                    this.fire("customchange", JSON.stringify(sqlData), this.editor);
+                    if(this.data.rendered == true){
+                        this.editables.rendered.setHtml(this.render());
+                        this.editables.rendered.$.style.opacity=1;
+                    } else {
+                       this.editables.rendered.$.style.opacity=0;
+                    }
                 }
                 // other data
                 // Check whether "width" widget data is set and remove or set "width" CSS style.
@@ -155,13 +176,58 @@ CKEDITOR.plugins.add('cksqlite', {
                     this.element.removeStyle('width');
                 else
                     this.element.setStyle('width', this.data.width);
-
+                
                 // Brutally remove all align classes and set a new one if "align" widget data is set.
                 this.element.removeClass('align-left');
                 this.element.removeClass('align-right');
                 this.element.removeClass('align-center');
                 if (this.data.align)
                     this.element.addClass('align-' + this.data.align);
+            },
+            render: function(){
+              // with filtered data and template issue the html patch
+              var i,j;
+              var formatList = JSON.parse(this.editables.format.getText());              
+              var content = JSON.parse(this.editables.content.getText());
+              var output='<table class="cksqlite-render">';
+              for(i=0; i<content.length;i++){
+                 var template = this.editables.template.getText();
+                 for(j=0;j<formatList.length;j++){
+                    var r = new RegExp("\\$"+formatList[j].variable+"\\$",'i');
+                    template = template.replace(r,content[i][formatList[j].variable]);
+                 }
+                 output += template;
+              }
+              output += '</table>' ;   
+              return output;    
+            },
+            resetTemplate: function(sqlData){
+                // calculate out-of-the box template
+                   var template="";
+                   var i=0;
+                   var formatList = JSON.parse(this.editables.format.getText());
+                   if(this.data.type=='horizontal'){
+                         template +="<tr>";
+                         for(i=0; i<formatList.length; i++){
+                             template +="<td>";
+                             template += "$"+formatList[i].key+"$";
+                             template +="</td>";
+                         }
+                         template +="</tr>";
+                   } else {
+                       // vertical                         
+                         for(i=0; i<formatList.length; i++){
+                             template +="<tr>";
+                             template +="<td><b>";
+                             template +=formatList[i].title;
+                             template +="</td></b>";
+                             template +="<td>";
+                             template += "$"+formatList[i].variable+"$";
+                             template +="</td>";
+                             template +="</tr>";
+                         }                         
+                   }
+                   return template;
             },
             resetFormat: function(sqlData) {
                 // calculate the out-of-the box format for the given query
@@ -171,24 +237,26 @@ CKEDITOR.plugins.add('cksqlite', {
                     for (var key in sqlData[0]) {
                         format.push({
                             variable: key,
+                            title: key,
                             format: "%s"
-                        }); // by default the format is the string format
+                        });
+                        // by default the format is the string format
                     }
                 }
                 return JSON.stringify(format);
             },
-            formatData: function(sqlData){
+            formatData: function(sqlData) {
                 var formatList = JSON.parse(this.editables.format.getText());
                 var out = [];
-                var i,j;
+                var i, j;
                 if ((!!sqlData) && (Array.isArray(sqlData))) {
-                    for(i=0; i<sqlData.length; i++){
+                    for (i = 0; i < sqlData.length; i++) {
                         var record = {};
-                        for(j=0;j<formatList.length;j++){
-                            record[formatList[j].variable]=this.sprintf(formatList[j].format,sqlData[i][formatList[j].variable]);
+                        for (j = 0; j < formatList.length; j++) {
+                            record[formatList[j].variable] = this.sprintf(formatList[j].format, sqlData[i][formatList[j].variable]);
                         }
                         out.push(record);
-                    }                    
+                    }
                 }
                 return out;
             },
@@ -197,7 +265,7 @@ CKEDITOR.plugins.add('cksqlite', {
                 if (typeof format != 'string') {
                     throw "sprintf: The first arguments need to be a valid format string.";
                 }
-
+                
                 /**
                  * Define the regex to match a formating string
                  * The regex consists of the following parts:
@@ -219,7 +287,7 @@ CKEDITOR.plugins.add('cksqlite', {
                  *  X - hexadecimal number (uppercase characters)
                  */
                 var r = new RegExp(/%(\+)?([0 ]|'(.))?(-)?([0-9]+)?(\.([0-9]+))?([%bcdfosxX])/g);
-
+                
                 /**
                  * Each format string is splitted into the following parts:
                  * 0: Full format string
@@ -241,7 +309,7 @@ CKEDITOR.plugins.add('cksqlite', {
                     if ((paramIndex >= arguments.length) && (part[8] != '%')) {
                         throw "sprintf: At least one argument was missing.";
                     }
-
+                    
                     parts[parts.length] = {
                         /* beginning of the part in the string */
                         begin: part.index,
@@ -252,7 +320,7 @@ CKEDITOR.plugins.add('cksqlite', {
                         /* is the given data negative */
                         negative: (parseFloat(arguments[paramIndex]) < 0) ? true : false,
                         /* padding character (default: <space>) */
-                        padding: (part[2] == undefined) ? (' ') /* default */ : ((part[2].substring(0, 1) == "'") ? (part[3]) /* use special char */ : (part[2]) /* use normal <space> or zero */ ),
+                        padding: (part[2] == undefined) ? (' ')/* default */ : ((part[2].substring(0, 1) == "'") ? (part[3])/* use special char */ : (part[2])/* use normal <space> or zero */),
                         /* should the output be aligned left?*/
                         alignLeft: (part[4] == '-'),
                         /* width specifier (number or false) */
@@ -265,63 +333,64 @@ CKEDITOR.plugins.add('cksqlite', {
                         data: (part[8] != '%') ? String(arguments[paramIndex++]) : false
                     };
                 }
-
+                
                 var newString = "";
                 var start = 0;
                 // Generate our new formated string
                 for (var i = 0; i < parts.length; ++i) {
                     // Add first unformated string part
                     newString += format.substring(start, parts[i].begin);
-
+                    
                     // Mark the new string start
                     start = parts[i].end;
-
+                    
                     // Create the appropriate preformat substitution
                     // This substitution is only the correct type conversion. All the
                     // different options and flags haven't been applied to it at this
                     // point
                     var preSubstitution = "";
                     switch (parts[i].type) {
-                        case '%':
-                            preSubstitution = "%";
-                            break;
-                        case 'b':
-                            preSubstitution = Math.abs(parseInt(parts[i].data)).toString(2);
-                            break;
-                        case 'c':
-                            preSubstitution = String.fromCharCode(Math.abs(parseInt(parts[i].data)));
-                            break;
-                        case 'd':
-                            preSubstitution = String(Math.abs(parseInt(parts[i].data)));
-                            break;
-                        case 'f':
-                            preSubstitution = (parts[i].precision === false) ? (String((Math.abs(parseFloat(parts[i].data))))) : (Math.abs(parseFloat(parts[i].data)).toFixed(parts[i].precision));
-                            break;
-                        case 'o':
-                            preSubstitution = Math.abs(parseInt(parts[i].data)).toString(8);
-                            break;
-                        case 's':
-                            preSubstitution = parts[i].data.substring(0, parts[i].precision ? parts[i].precision : parts[i].data.length); /* Cut if precision is defined */
-                            break;
-                        case 'x':
-                            preSubstitution = Math.abs(parseInt(parts[i].data)).toString(16).toLowerCase();
-                            break;
-                        case 'X':
-                            preSubstitution = Math.abs(parseInt(parts[i].data)).toString(16).toUpperCase();
-                            break;
-                        default:
-                            throw 'sprintf: Unknown type "' + parts[i].type + '" detected. This should never happen. Maybe the regex is wrong.';
+                    case '%':
+                        preSubstitution = "%";
+                        break;
+                    case 'b':
+                        preSubstitution = Math.abs(parseInt(parts[i].data)).toString(2);
+                        break;
+                    case 'c':
+                        preSubstitution = String.fromCharCode(Math.abs(parseInt(parts[i].data)));
+                        break;
+                    case 'd':
+                        preSubstitution = String(Math.abs(parseInt(parts[i].data)));
+                        break;
+                    case 'f':
+                        preSubstitution = (parts[i].precision === false) ? (String((Math.abs(parseFloat(parts[i].data))))) : (Math.abs(parseFloat(parts[i].data)).toFixed(parts[i].precision));
+                        break;
+                    case 'o':
+                        preSubstitution = Math.abs(parseInt(parts[i].data)).toString(8);
+                        break;
+                    case 's':
+                        preSubstitution = parts[i].data.substring(0, parts[i].precision ? parts[i].precision : parts[i].data.length);
+                        /* Cut if precision is defined */
+                        break;
+                    case 'x':
+                        preSubstitution = Math.abs(parseInt(parts[i].data)).toString(16).toLowerCase();
+                        break;
+                    case 'X':
+                        preSubstitution = Math.abs(parseInt(parts[i].data)).toString(16).toUpperCase();
+                        break;
+                    default:
+                        throw 'sprintf: Unknown type "' + parts[i].type + '" detected. This should never happen. Maybe the regex is wrong.';
                     }
-
+                    
                     // The % character is a special type and does not need further processing
                     if (parts[i].type == "%") {
                         newString += preSubstitution;
                         continue;
                     }
-
+                    
                     // Modify the preSubstitution by taking sign, padding and width
                     // into account
-
+                    
                     // Pad the string based on the given width
                     if (parts[i].width != false) {
                         // Padding needed?
@@ -332,7 +401,7 @@ CKEDITOR.plugins.add('cksqlite', {
                             }
                         }
                     }
-
+                    
                     // Add a sign symbol if neccessary or enforced, but only if we are
                     // not handling a string
                     if (parts[i].type == 'b' || parts[i].type == 'd' || parts[i].type == 'o' || parts[i].type == 'f' || parts[i].type == 'x' || parts[i].type == 'X') {
@@ -342,14 +411,14 @@ CKEDITOR.plugins.add('cksqlite', {
                             preSubstitution = "+" + preSubstitution;
                         }
                     }
-
+                    
                     // Add the substitution to the new string
                     newString += preSubstitution;
                 }
-
+                
                 // Add the last part of the given format string, which may still be there
                 newString += format.substring(start, format.length);
-
+                
                 return newString;
             }
         });
