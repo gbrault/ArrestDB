@@ -85,9 +85,11 @@
 				window._cke_htmlToLoad = eventData.dataValue;
 				sOpenUrl = CKEDITOR.getUrl( pluginPath + 'preview.html' );
 			}
-
-			var oWindow = window.open( sOpenUrl, null, 'toolbar=yes,location=no,status=yes,menubar=yes,scrollbars=yes,resizable=yes,width=' +
-				iWidth + ',height=' + iHeight + ',left=' + iLeft );
+			var oWindow=null;
+			if ( !CKEDITOR.env.ie && !CKEDITOR.env.gecko && !CKEDITOR.env.chrome) {
+			 	oWindow = window.open( sOpenUrl, null, 'toolbar=yes,location=no,status=yes,menubar=yes,scrollbars=yes,resizable=yes,width=' +
+					iWidth + ',height=' + iHeight + ',left=' + iLeft );
+			}
 
 			// For IE we want to assign whole js stored in ieLocation, but in case of
 			// popup blocker activation oWindow variable will be null. (#11597)
@@ -102,7 +104,7 @@
 			}
 			
 			if( CKEDITOR.env.chrome ){				
-				var popup_win = "toolbar=yes,location=no,directories=yes,menubar=yes,scrollbars=yes,width=600,height=600,left=100,top=100";
+				var popup_win = "toolbar=yes,location=no,directories=yes,menubar=yes,scrollbars=yes,width=900,height=600,left=100,top=100";
 				var print_form = window.open('','',popup_win);
 				print_form.document.open();
 				print_form.document.write(sHTML);
