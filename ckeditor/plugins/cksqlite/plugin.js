@@ -25,7 +25,7 @@ CKEDITOR.plugins.add('cksqlite', {
             // * http://docs.ckeditor.com/#!/guide/dev_advanced_content_filter
             // * http://docs.ckeditor.com/#!/guide/plugin_sdk_integration_with_acf
             allowedContent: 'div(!cksqlite,align-left,align-right,align-center){width};' + 
-            'h2(!cksqlite-select)[!data-select,title]; div(!cksqlite-content,title); div(!cksqlite-template,title); div(!cksqlite-format,title)',
+            'h2(!cksqlite-select)[!data-select,title]; div(!cksqlite-content)[title]; div(!cksqlite-template)[title]; div(!cksqlite-format)[title]; div(!cksqlite-rendered)[title];',
             
             // Minimum HTML which is required by this widget to work.
             requiredContent: 'div(cksqlite)',
@@ -210,7 +210,7 @@ CKEDITOR.plugins.add('cksqlite', {
                          template +="<tr>";
                          for(i=0; i<formatList.length; i++){
                              template +="<td>";
-                             template += "$"+formatList[i].key+"$";
+                             template += "$"+formatList[i].variable+"$";
                              template +="</td>";
                          }
                          template +="</tr>";
