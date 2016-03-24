@@ -24,34 +24,14 @@ CKEDITOR.plugins.add('cksqlite', {
             // Read more about the Advanced Content Filter here:
             // * http://docs.ckeditor.com/#!/guide/dev_advanced_content_filter
             // * http://docs.ckeditor.com/#!/guide/plugin_sdk_integration_with_acf
-            allowedContent: 'div(!cksqlite,align-left,align-right,align-center){width};' + 
-            'h2(!cksqlite-select)[!data-select,title]; div(!cksqlite-content)[title]; div(!cksqlite-template)[title]; div(!cksqlite-format)[title]; div(!cksqlite-rendered)[title];',
+            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-select,!data-content,!data-format,!data-template]{width};' + 
+            'div(!cksqlite-rendered)[title];',
             
             // Minimum HTML which is required by this widget to work.
             requiredContent: 'div(cksqlite)',
             
             // Define a nested editable area.
             editables: {
-                select: {
-                    // Define CSS selector used for finding the element inside widget element.
-                    selector: '.cksqlite-select',
-                    // Define content allowed in this nested editable. Its content will be
-                    // filtered accordingly and the toolbar will be adjusted when this editable
-                    // is focused.
-                    allowedContent: 'br strong em'
-                },
-                format: {
-                    selector: '.cksqlite-format',
-                    allowedContent: 'p'
-                },
-                template: {
-                    selector: '.cksqlite-template',
-                    allowedContent: 'p'
-                },
-                content: {
-                    selector: '.cksqlite-content',
-                    allowedContent: 'p br ul ol li strong em'
-                },
                 rendered: {
                     selector:  '.cksqlite-rendered',
                     allowedContent: 'tr td p b br ul li ol strong em i;'+'table[csqlite-render]'   
@@ -61,10 +41,6 @@ CKEDITOR.plugins.add('cksqlite', {
             // Define the template of a new Sqlite widget.
             // The template will be used when creating new instances of the Simple Box widget.
             template: '<div class="cksqlite" title="Arrest DB Widget">' + 
-            '<h2 class="cksqlite-select" title="Arrest DB select">ArrestDB select</h2>' + 
-            '<div class="cksqlite-format" title="Format"><p>Format...</p></div>' + 
-            '<div class="cksqlite-template" title="Template"><p>Template...</p></div>' + 
-            '<div class="cksqlite-content" title="Filtered Data"><p>Content...</p></div>' + 
             '<div class="cksqlite-rendered" title="rendered Data"><p>Content...</p></div>' + 
             '</div>',
             
@@ -107,27 +83,27 @@ CKEDITOR.plugins.add('cksqlite', {
                         this.on('select',function(){
                              alert("select");       
                         });
-               */
+               
                 this.on('customchange', function() {
                     alert("custom change");
                 });
+                */
                 
                 
-                // set the editables mode
-                this.editables.select.setAttribute("contenteditable", false);
-                this.editables.select.unselectable();
-                this.editables.content.setAttribute("contenteditable", false);
-                this.editables.content.unselectable();
-                // SQL parameters 
-                // check if set as data
-                var restSqlUrl = this.element.data('restSqlUrl');
-                if ((restSqlUrl == undefined) || restSqlUrl == null  || (restSqlUrl == "")) {
-                    // get the DOM value (persisted into data-select attribute...')
-                    var domRestSqlUrl = this.editables.select.getAttribute("data-select");
-                    if ((domRestSqlUrl != undefined) && (domRestSqlUrl != "")) {
-                        this.setData('restSqlUrl', domRestSqlUrl);
-                    }
-                }
+                // SQL parameters from persisted attributes
+                var select = this.element.data('select');
+                this.setData('select', select);
+                               
+                var content = this.element.data('content');
+                this.setData('content', content);
+ 
+                var format = this.element.data('format');
+                this.setData('format', format);
+ 
+                var template = this.element.data('template');
+                this.setData('template', template);
+     
+                
                 // Other parameters
                 var width = this.element.getStyle('width');
                 if (width)
@@ -146,32 +122,11 @@ CKEDITOR.plugins.add('cksqlite', {
             // Data may be changed by using the widget.setData() method, used in the widget dialog window.			
             data: function() {
                 // SQL data
-                // get the restSqlUrl data, creat the ajax request and feed the result in the content field
-                if ((this.data.restSqlUrl != undefined) && (this.data.restSqlUrl != "")) {
-                    var url = "/ArrestDB/ArrestDB.php" + this.data.restSqlUrl;
-                    var sqlData = CKEDITOR.restajax.getjson(url);
-                    if (this.data.resetFormat == true) {
-                        this.editables.format.setText(this.resetFormat(sqlData));
-                        this.editables.template.setText(this.resetTemplate());
-                        this.setData('resetFormat', false);
-                    }
-                    if (this.data.resetTemplate == true) {                    
-                        this.editables.template.setText(this.resetTemplate());
-                        this.setData('resetTemplate', false);
-                    }
-                    this.editables.content.setText(JSON.stringify(this.formatData(sqlData)));
-                    this.editables.select.setText(this.data.restSqlUrl);
-                    this.fire("customchange", JSON.stringify(sqlData), this.editor);
-                    if(this.data.rendered == true){
-                        this.editables.rendered.setHtml(this.render());
-                        this.editables.rendered.$.style.opacity=1;
-                    } else {
-                       this.editables.rendered.$.style.opacity=0;
-                    }
+                if(this.data.rendered!=""){
+                    this.editables.rendered.setHtml(this.data.rendered);
                 }
-                // other data
-                // Check whether "width" widget data is set and remove or set "width" CSS style.
-                // The style is set on widget main element (div.simplebox).
+                
+                // positionning
                 if (this.data.width == '')
                     this.element.removeStyle('width');
                 else
@@ -201,12 +156,12 @@ CKEDITOR.plugins.add('cksqlite', {
               output += '</table>' ;   
               return output;    
             },
-            resetTemplate: function(sqlData){
+            resetTemplate: function(format,type){
                 // calculate out-of-the box template
                    var template="";
                    var i=0;
-                   var formatList = JSON.parse(this.editables.format.getText());
-                   if(this.data.type=='horizontal'){
+                   var formatList = JSON.parse(format);
+                   if(type=='horizontal'){
                          template +="<tr>";
                          for(i=0; i<formatList.length; i++){
                              template +="<td>";
