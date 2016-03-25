@@ -24,7 +24,7 @@ CKEDITOR.plugins.add('cksqlite', {
             // Read more about the Advanced Content Filter here:
             // * http://docs.ckeditor.com/#!/guide/dev_advanced_content_filter
             // * http://docs.ckeditor.com/#!/guide/plugin_sdk_integration_with_acf
-            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-select,!data-content, data-type,!data-format,!data-template,,!data-rendered]{width};' + 
+            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-select,!data-name, !data-content, data-type,!data-format,!data-template,data-index,!data-rendered]{width};' + 
             'div(!cksqlite-rendered)[title];',
             
             // Minimum HTML which is required by this widget to work.
@@ -34,7 +34,7 @@ CKEDITOR.plugins.add('cksqlite', {
             editables: {
                 rendered: {
                     selector:  '.cksqlite-rendered',
-                    allowedContent: 'tr td p b br ul li ol strong em i;'+'table[csqlite-render]'   
+                    allowedContent: 'tr td[data-cell] p b br ul li ol strong em i;'+'table[csqlite-render]'   
                 }
             },
             
@@ -72,7 +72,7 @@ CKEDITOR.plugins.add('cksqlite', {
                 
             },
             */
-            // When a widget is being initialized, we need to read the data (restSqlUrl)
+            // When a widget is being initialized, we need to read the data 
             // from DOM and set it by using the widget.setData() method.
             // More code which needs to be executed when DOM is available may go here.
             init: function() {
@@ -87,12 +87,41 @@ CKEDITOR.plugins.add('cksqlite', {
                 this.on('customchange', function() {
                     alert("custom change");
                 });
-                */
                 
+                this.on('rendered', function() {
+                    alert("widget rendered");
+                });    
+                this.on('selectChange', function() {
+                    alert("widget selectChange");
+                });
+                */ 
+
+                // makes sure we can reference widget from the nested editable
+                this.editables.rendered.widget = this;          
+                this.editables.rendered.on('click', function() {
+                    // alert("rendered clicked");
+                    var ref=arguments[0].data.$.srcElement.getAttribute('data-cell');
+                    if((ref!=undefined)&&(ref!=null)&&(ref!="")){
+                        refs = ref.split(",");
+                        var row = parseInt(refs[0],10);
+                        var col = parseInt(refs[1],10);
+                        var data = {row:row,col:col,widget:this.widget};
+                        // save the index of the new selected object
+                        this.widget.element.setAttribute('data-index',ref);
+                        this.widget.setData('index', ref);
+                        this.widget.fire('selectChange',data);
+                    }
+                });                
                 
                 // SQL parameters from persisted attributes
                 var select = this.element.data('select');
                 this.setData('select', select);
+
+                var index = this.element.data('index');
+                this.setData('index', index);
+
+                var name = this.element.data('name');
+                this.setData('name', name);
                                          
                 var content = this.element.data('content');
                 this.setData('content', content);
@@ -120,6 +149,17 @@ CKEDITOR.plugins.add('cksqlite', {
                     this.setData('align', 'right');
                 if (this.element.hasClass('align-center'))
                     this.setData('align', 'center');
+
+                // add this cksqlite instance to the cksqlite List of instances
+                // but after all data is set!
+                // done by the framework
+                // how to register on widget event from another widget
+                // var targetwidget = <widget>.findCksqlite('<name>');
+                // targetwidget.on('<event>',function(){
+                //    .... process what's needed ....     
+                // });
+                // cksqlite events
+                // 'selectChange'' => data = {row:row,col:col,widget:<origin widget>};
             },
             
             // Listen on the widget#data event which is fired every time the widget data changes
@@ -134,6 +174,7 @@ CKEDITOR.plugins.add('cksqlite', {
                 this.element.setAttribute('data-rendered',rendered);
                 this.setData('rendered', rendered);
                 this.editables.rendered.setHtml(rendered);
+                this.fire('rendered',this);
                 
                 // positionning
                 if (this.data.width == '')
@@ -154,12 +195,14 @@ CKEDITOR.plugins.add('cksqlite', {
               if((format==null)||(content==null)||(template==null)) return "";
               var formatList = JSON.parse(format);              
               var content = JSON.parse(content);
+              var out = this.formatData(content,format);
               var output='<table class="cksqlite-render">';
               for(i=0; i<content.length;i++){
                  var rendered_template = template;
+                 rendered_template=rendered_template.replace(new RegExp('\\$row\\$','g'),""+i);
                  for(j=0;j<formatList.length;j++){
                     var r = new RegExp("\\$"+formatList[j].variable+"\\$",'i');
-                    rendered_template = rendered_template.replace(r,content[i][formatList[j].variable]);
+                    rendered_template = rendered_template.replace(r,out[i][formatList[j].variable]);
                  }
                  output += rendered_template;
               }
@@ -174,7 +217,7 @@ CKEDITOR.plugins.add('cksqlite', {
                    if(type=='horizontal'){
                          template +="<tr>";
                          for(i=0; i<formatList.length; i++){
-                             template +="<td>";
+                             template +='<td data-cell="$row$,'+i+'">';
                              template += "$"+formatList[i].variable+"$";
                              template +="</td>";
                          }
@@ -224,6 +267,33 @@ CKEDITOR.plugins.add('cksqlite', {
                     }
                 }
                 return out;
+            },
+            findCksqlite: function(name){                
+                var instances = this.editor.widgets.instances
+                if((instances!=undefined)&&(instances!=null)){                     
+                      for(var i in instances){
+                          if(instances[i].name=='cksqlite') {
+                               if(instances[i].data.name==name) {
+                                    return instances[i]; 
+                               }     
+                          }       
+                      }      
+                }
+                return null
+            },
+            masterList: function(){
+                var instances = this.editor.widgets.instances
+                if((instances!=undefined)&&(instances!=null)){
+                      var select = [];
+                      for(var i in instances){
+                          if(instances[i].name=='cksqlite'){
+                              if(instances[i].data.name!=this.data.name){
+                                    select.push([instances[i].data.name, i]);
+                              }
+                          }  
+                      }
+                      return select;                                  
+                }       
             },
             sprintf: function(format) {
                 // Check for format definition

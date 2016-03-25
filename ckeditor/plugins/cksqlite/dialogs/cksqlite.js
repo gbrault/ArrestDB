@@ -89,30 +89,83 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
             							label: 'tbd',
         							}
     								]
-					},		
-					{
-						id: 'select',
-						type: 'text',
-						label: 'Rest SQL Url',
-						width: '250px',
-						setup: function( widget ) {
-							this.setValue( widget.data.select );
-							// save the widget context into the dialog to be able to use widget functions
-							// must be in the first elements
-							this.getDialog().widget = widget;
-						},
-						commit: function( widget ) {
-							// persist into DOM
-							widget.element.setAttribute('data-select',this.getValue());
-							widget.setData( 'select', this.getValue() );
-						},
-						onChange: function(api){
-							var url = "/ArrestDB/ArrestDB.php" + this.getValue();
-                    		var sqlData = CKEDITOR.restajax.getjson(url);
-                    		// var widget = this.getDialog().widget;
-                    		// widget.setData('content',JSON.stringify(sqlData));
-                    		this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
-						}
+					},
+				    {
+						id:'references',
+    					type: 'hbox',
+   	 					widths: [ '50%', '50%' ],
+    					children: [        														
+							{
+								id: 'select',
+								type: 'text',
+								label: 'Rest SQL Url (ArrestDB)',
+								width: '250px',
+								setup: function( widget ) {
+									this.setValue( widget.data.select );
+									// save the widget context into the dialog to be able to use widget functions
+									// must be in the first elements
+									this.getDialog().widget = widget;
+								},
+								commit: function( widget ) {
+									// persist into DOM
+									widget.element.setAttribute('data-select',this.getValue());
+									widget.setData( 'select', this.getValue() );
+								},
+								onChange: function(api){
+									var url = "/ArrestDB/ArrestDB.php" + this.getValue();
+                    				var sqlData = CKEDITOR.restajax.getjson(url);
+                    				// var widget = this.getDialog().widget;
+                    				// widget.setData('content',JSON.stringify(sqlData));
+                    				this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
+								}
+							},
+							{
+								id: 'name',
+								type: 'text',
+								label: 'Widget Instance Name',
+								width: '250px',
+								setup: function( widget ) {
+									this.setValue( widget.data.name );
+								},
+								commit: function( widget ) {
+									// persist into DOM
+									widget.element.setAttribute('data-name',this.getValue());
+									widget.setData( 'name', this.getValue() );
+								},
+								onChange: function(api){
+                    				// may fire an event to tell name has changed
+                    				// must check it's unique
+                    				var widget = this.getDialog().widget;
+                    				var w = widget.findCksqlite(this.getValue());
+                    				if((w!=null)&&(w!=widget)){
+                    					// name not unique...
+                    					this.getDialog().getContentElement('info','name').setValue('Invalid');
+                    				}
+								}
+
+							},
+							{
+								id: 'master',
+								type: 'select',
+								label: 'Master link',
+								items:  [["none", "-1"]],
+								// When setting up this field, set its value to the "master" value from widget data.
+								setup: function( widget ) {
+									this.clear();
+									this.add("none","-1");
+									var options = widget.masterList();
+									for(var i=0; i<options.length; i++){
+										this.add(options[i][0], options[i][1]);
+									}
+									this.setValue( widget.data.master );							
+								},
+								// When committing (saving) this field, set its value to the widget data.
+								commit: function( widget ) {
+									widget.setData( 'master', this.getValue() );
+								}
+							},
+
+					    ]
 					},
 					{
 						id: 'content',
