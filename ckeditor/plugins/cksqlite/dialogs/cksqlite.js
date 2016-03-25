@@ -78,9 +78,9 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
             								// calculate and reset the Format
             								var widget = this.getDialog().widget;
             								var format = this.getDialog().getContentElement('info','format').getValue();
-            								var template = widget.resetTemplate(format);
             								var type = this.getDialog().getContentElement('info','type').getValue();          								
-            								this.getDialog().getContentElement('info','template').setValue(template,type);
+            								var template = widget.resetTemplate(format,type);
+            								this.getDialog().getContentElement('info','template').setValue(template);
             							}
         							},
         							{
@@ -172,6 +172,7 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 						},
 						// When committing (saving) this field, set its value to the widget data.
 						commit: function( widget ) {
+							widget.element.setAttribute('data-type',this.getValue());
 							widget.setData( 'type', this.getValue() );
 						}
 					},

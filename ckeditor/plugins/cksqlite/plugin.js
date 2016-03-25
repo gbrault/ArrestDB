@@ -24,7 +24,7 @@ CKEDITOR.plugins.add('cksqlite', {
             // Read more about the Advanced Content Filter here:
             // * http://docs.ckeditor.com/#!/guide/dev_advanced_content_filter
             // * http://docs.ckeditor.com/#!/guide/plugin_sdk_integration_with_acf
-            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-select,!data-content,!data-format,!data-template]{width};' + 
+            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-select,!data-content, data-type,!data-format,!data-template,,!data-rendered]{width};' + 
             'div(!cksqlite-rendered)[title];',
             
             // Minimum HTML which is required by this widget to work.
@@ -93,16 +93,21 @@ CKEDITOR.plugins.add('cksqlite', {
                 // SQL parameters from persisted attributes
                 var select = this.element.data('select');
                 this.setData('select', select);
-                               
+                                         
                 var content = this.element.data('content');
                 this.setData('content', content);
  
                 var format = this.element.data('format');
                 this.setData('format', format);
  
+                var type = this.element.data('type');
+                this.setData('type', type);
+
                 var template = this.element.data('template');
                 this.setData('template', template);
-     
+
+                var rendered = this.element.data('rendered');
+                this.setData('rendered', rendered);
                 
                 // Other parameters
                 var width = this.element.getStyle('width');
@@ -122,9 +127,13 @@ CKEDITOR.plugins.add('cksqlite', {
             // Data may be changed by using the widget.setData() method, used in the widget dialog window.			
             data: function() {
                 // SQL data
-                if(this.data.rendered!=""){
-                    this.editables.rendered.setHtml(this.data.rendered);
-                }
+                var format = this.data.format;
+                var content = this.data.content;
+                var template = this.data.template;
+                var rendered = this.render(format,content,template);
+                this.element.setAttribute('data-rendered',rendered);
+                this.setData('rendered', rendered);
+                this.editables.rendered.setHtml(rendered);
                 
                 // positionning
                 if (this.data.width == '')
@@ -139,19 +148,20 @@ CKEDITOR.plugins.add('cksqlite', {
                 if (this.data.align)
                     this.element.addClass('align-' + this.data.align);
             },
-            render: function(){
+            render: function(format, content, template){
               // with filtered data and template issue the html patch
               var i,j;
-              var formatList = JSON.parse(this.editables.format.getText());              
-              var content = JSON.parse(this.editables.content.getText());
+              if((format==null)||(content==null)||(template==null)) return "";
+              var formatList = JSON.parse(format);              
+              var content = JSON.parse(content);
               var output='<table class="cksqlite-render">';
               for(i=0; i<content.length;i++){
-                 var template = this.editables.template.getText();
+                 var rendered_template = template;
                  for(j=0;j<formatList.length;j++){
                     var r = new RegExp("\\$"+formatList[j].variable+"\\$",'i');
-                    template = template.replace(r,content[i][formatList[j].variable]);
+                    rendered_template = rendered_template.replace(r,content[i][formatList[j].variable]);
                  }
-                 output += template;
+                 output += rendered_template;
               }
               output += '</table>' ;   
               return output;    
@@ -200,8 +210,8 @@ CKEDITOR.plugins.add('cksqlite', {
                 }
                 return JSON.stringify(format);
             },
-            formatData: function(sqlData) {
-                var formatList = JSON.parse(this.editables.format.getText());
+            formatData: function(sqlData, format) {
+                var formatList = JSON.parse(format);
                 var out = [];
                 var i, j;
                 if ((!!sqlData) && (Array.isArray(sqlData))) {

@@ -9,50 +9,20 @@ Licensed under the terms of the MIT License (see LICENSE.md).
 	border-radius: 8px;
 	border: 1px solid #ddd;
 	box-shadow: 0 1px 1px #fff inset, 0 -1px 0px #ccc inset;
-	position:relative;
 }
 
 .cksqlite-rendered{
-	position: absolute;
 	top:0;
 	left:0;
 	background-color:white;
 	width:100%;
 	height:100%;
-	z-index:10;
-	opacity:0;
 }
 
 table.cksqlite-render {
 	border: none;
 }
 
-.cksqlite-design, .cksqlite-runtime {
-	width: 100%;
-	height: 100%;
-	position: absolute;
-	top:0;
-	left:0;
-}
-
-.cksqlite-runtime {
-	z-index: 10;
-	background-color: white;
-}
-
-.cksqlite-select, .cksqlite-format, .cksqlite-template, .cksqlite-content {
-	box-shadow: 0 1px 1px #ddd inset;
-	border: 1px solid #cccccc;
-	border-radius: 5px;
-	background: #fff;
-}
-.cksqlite-select {
-	margin: 0 0 8px;
-	padding: 5px 8px;
-}
-.cksqlite-content, .cksqlite-format , .cksqlite-template{
-	padding: 0 8px;
-}
 .cksqlite.align-right {
 	float: right;
 }
