@@ -105,18 +105,21 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 									// save the widget context into the dialog to be able to use widget functions
 									// must be in the first elements
 									this.getDialog().widget = widget;
+									var sqlData = widget.getContent(widget.data.select,widget.data.master);
+                   				    this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
 								},
 								commit: function( widget ) {
 									// persist into DOM
-									widget.element.setAttribute('data-select',this.getValue());
+									widget.element.setAttribute('data-select',encodeURI(this.getValue()));
 									widget.setData( 'select', this.getValue() );
 								},
 								onChange: function(api){
-									var url = "/ArrestDB/ArrestDB.php" + this.getValue();
-                    				var sqlData = CKEDITOR.restajax.getjson(url);
-                    				// var widget = this.getDialog().widget;
-                    				// widget.setData('content',JSON.stringify(sqlData));
-                    				this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
+									var widget = this.getDialog().widget;
+									if((widget!=undefined)&&(widget!=null)){
+										widget.data.select = this.getValue(); // don't want to fire data
+										var sqlData = widget.getContent();
+                   				    	this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
+                   				    }
 								}
 							},
 							{
@@ -161,7 +164,22 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 								},
 								// When committing (saving) this field, set its value to the widget data.
 								commit: function( widget ) {
+									widget.element.setAttribute('data-master',this.getValue());
 									widget.setData( 'master', this.getValue() );
+								},
+								onChange: function(api){
+									// need to recompute content
+									// 1- select a table ex: /Orders?limit=2
+									// 2- restrict to a field ex: /Orders/CustomerID/VINET
+									// 3- select the master link
+									// the sample value is replace by the indexed value from the master
+									// the column name is the token before the value
+									var widget = this.getDialog().widget;
+									if((widget!=undefined)&&(widget!=null)){
+										widget.data.master=this.getValue(); // don't want to trigger data event
+										var sqlData = widget.getContent();
+                   				    	this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
+									}
 								}
 							},
 
@@ -178,7 +196,7 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 						},
 						commit: function( widget ) {
 							// persist into DOM
-							widget.element.setAttribute('data-content',this.getValue());
+							widget.element.setAttribute('data-content',encodeURI(this.getValue()));
 							widget.setData( 'content', this.getValue() );
 						}
 					},

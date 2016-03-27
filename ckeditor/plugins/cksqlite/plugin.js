@@ -12,11 +12,11 @@ CKEDITOR.plugins.add('cksqlite', {
     // Register the icon used for the toolbar button. It must be the same
     // as the name of the widget.
     icons: 'cksqlite',
-    
+
     // The plugin initialization logic goes inside this method.
     init: function(editor) {
         // Register the editing dialog.
-        CKEDITOR.dialog.add('cksqlite', this.path + 'dialogs/cksqlite.js');
+        CKEDITOR.dialog.add('cksqlite', this.path + 'dialogs/cksqlite.js'); 
         
         // Register the cksqlite widget.
         editor.widgets.add('cksqlite', {
@@ -24,7 +24,7 @@ CKEDITOR.plugins.add('cksqlite', {
             // Read more about the Advanced Content Filter here:
             // * http://docs.ckeditor.com/#!/guide/dev_advanced_content_filter
             // * http://docs.ckeditor.com/#!/guide/plugin_sdk_integration_with_acf
-            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-select,!data-name, !data-content, data-type,!data-format,!data-template,data-index,!data-rendered]{width};' + 
+            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-select,!data-name,data-master, !data-content, data-type,!data-format,!data-template,data-index,!data-rendered]{width};' + 
             'div(!cksqlite-rendered)[title];',
             
             // Minimum HTML which is required by this widget to work.
@@ -109,22 +109,25 @@ CKEDITOR.plugins.add('cksqlite', {
                         // save the index of the new selected object
                         this.widget.element.setAttribute('data-index',ref);
                         this.widget.setData('index', ref);
-                        this.widget.fire('selectChange',data);
+                        this.widget.fire('indexChange',data);
                     }
                 });                
                 
                 // SQL parameters from persisted attributes
                 var select = this.element.data('select');
-                this.setData('select', select);
+                this.setData('select', decodeURI(select));
 
                 var index = this.element.data('index');
                 this.setData('index', index);
+
+                var master = this.element.data('master');
+                this.setData('master', master);                
 
                 var name = this.element.data('name');
                 this.setData('name', name);
                                          
                 var content = this.element.data('content');
-                this.setData('content', content);
+                this.setData('content', decodeURI(content));
  
                 var format = this.element.data('format');
                 this.setData('format', format);
@@ -159,7 +162,9 @@ CKEDITOR.plugins.add('cksqlite', {
                 //    .... process what's needed ....     
                 // });
                 // cksqlite events
-                // 'selectChange'' => data = {row:row,col:col,widget:<origin widget>};
+                // 'indexChange' => data = {row:row,col:col,widget:<origin widget>};
+                // 'rendered' => data <origin widget>
+                
             },
             
             // Listen on the widget#data event which is fired every time the widget data changes
@@ -167,6 +172,7 @@ CKEDITOR.plugins.add('cksqlite', {
             // Data may be changed by using the widget.setData() method, used in the widget dialog window.			
             data: function() {
                 // SQL data
+                this.subscribeMaster('indexChange',this);
                 var format = this.data.format;
                 var content = this.data.content;
                 var template = this.data.template;
@@ -189,7 +195,7 @@ CKEDITOR.plugins.add('cksqlite', {
                 if (this.data.align)
                     this.element.addClass('align-' + this.data.align);
             },
-            render: function(format, content, template){
+           render: function(format, content, template){
               // with filtered data and template issue the html patch
               var i,j;
               if((format==null)||(content==null)||(template==null)) return "";
@@ -243,11 +249,9 @@ CKEDITOR.plugins.add('cksqlite', {
                     var format = [];
                     var i = 0;
                     for (var key in sqlData[0]) {
-                        format.push({
-                            variable: key,
-                            title: key,
-                            format: "%s"
-                        });
+                        var temp={};
+                        temp={variable:key,title:key,format:"%s"};
+                        format.push(temp);
                         // by default the format is the string format
                     }
                 }
@@ -288,12 +292,74 @@ CKEDITOR.plugins.add('cksqlite', {
                       for(var i in instances){
                           if(instances[i].name=='cksqlite'){
                               if(instances[i].data.name!=this.data.name){
-                                    select.push([instances[i].data.name, i]);
+                                    select.push([instances[i].data.name, instances[i].data.name]);
                               }
                           }  
                       }
                       return select;                                  
                 }       
+            },
+            getContent: function(){
+                  // test if master mode setData
+                  var path=this.data.select;                  
+                  if((this.data.master!=undefined) &&
+                     (this.data.master!=null) &&
+                     (this.data.master!="") &&
+                     (this.data.master!="-1")){
+                     // this widget is master linked
+                     // get the column name of master from select
+                     var n = path.lastIndexOf("/");
+                     var column_name = path.substring(0,n);
+                     var m = column_name.lastIndexOf("/");
+                     column_name = column_name.substring(m+1);
+                     var master_widget = this.findCksqlite(this.data.master);
+                     if((master_widget!=undefined)&&(master_widget!=null)){                        
+                        if((master_widget.data.index!=undefined)&&(master_widget.data.index!=null)){
+                           if((master_widget.data.content!=undefined)&&(master_widget.data.content!=null)){
+                              var content = JSON.parse(master_widget.data.content);
+                              if((content!=undefined)&&(content!=null)){
+                                 if((content[0][column_name]!=undefined)&&(content[0][column_name]!=null)){
+                                     var index = parseInt(master_widget.data.index.split()[0],10);
+                                     path = path.substring(0,n+1)+content[index][column_name];
+                                 }
+                              }
+                           }                           
+                        }   
+                     }
+                  }
+                  var url = "/ArrestDB/ArrestDB.php" + path;                  
+                  var sqlData = CKEDITOR.restajax.getjson(url);
+                  return sqlData;     
+            },
+            subscribeMaster: function(event,widget){                        
+                if(!!!widget.master){                                          
+                    widget.master = {};
+                }
+                if((!!widget.data.master)&&(widget.data.master!="-1")){
+                  var masterwidget = widget.findCksqlite(widget.data.master);
+                  if(!!masterwidget){
+                     if(!!widget.retry&&(widget.retry[event])) delete widget.retry[event];
+                       if(( widget.master[event]==undefined) || ( widget.master[event]==undefined)  ){
+                           // register event only once per event                   
+                           widget.master[event] = masterwidget.on(event,widget.event,null,widget);                      
+                       }
+                   } else {
+                   // need to retry
+                     if(!!!widget.retry) widget.retry={};
+                     widget.retry = setTimeout(widget.subscribeMaster,100,event,widget);
+                     return null;
+                   }
+                 }                
+            },
+            event: function(event){
+                // this is the subscribing widget
+                // event.event the type of event
+                if(event.name=='indexChange'){
+                    var widget = event.listenerData;
+                    // recompute content
+                    var sqlData = widget.getContent();
+                    widget.setData('content',JSON.stringify(sqlData));
+                }
             },
             sprintf: function(format) {
                 // Check for format definition

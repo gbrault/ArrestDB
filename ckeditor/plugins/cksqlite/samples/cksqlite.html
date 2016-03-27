@@ -69,6 +69,30 @@ document.onreadystatechange = function () {
      			}
      		}
 		});
+
+		CKEDITOR.instances.editor1.on("focus", function(event){       
+    	});
+    	
+    	CKEDITOR.instances.editor1.on("dataReady", function(event){
+		    // when all setup is done
+		    /*
+      		 for(var widget in CKEDITOR.instances.editor1.widgets.instances){	 	
+           		widget.master=widget.subscribeMaster('indexChange');
+       		}
+       		*/
+    	});
+
+    	CKEDITOR.instances.editor1.on("configLoaded", function(event){
+    		
+    	});
+
+    	CKEDITOR.instances.editor1.on("loaded", function(event){
+    		
+    	});
+
+    	CKEDITOR.instances.editor1.on("contentDom", function(event){
+    		
+    	});
   }
 }
 
