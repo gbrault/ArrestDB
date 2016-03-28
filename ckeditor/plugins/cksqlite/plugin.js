@@ -1,7 +1,7 @@
 /**
- * Copyright (c) 2016, CKSource -Gilbert Brault. All rights reserved.
+ * Copyright (c) 2016, Gilbert Brault. All rights reserved.
  *
- * cksqlite plugin 
+ * cksqlite plugin (widget to display database chuncks)
  *
  */
 // Register the plugin within the editor.
@@ -94,22 +94,39 @@ CKEDITOR.plugins.add('cksqlite', {
                 this.on('selectChange', function() {
                     alert("widget selectChange");
                 });
-                */ 
-
+                */
+                // the following 4 lines must be at the bigenning of init function
                 // makes sure we can reference widget from the nested editable
-                this.editables.rendered.widget = this;          
+                this.editables.rendered.widget = this;
+                // attach the PubSub Communication Object to this widget
+                this.PubSub = this.editor.window.PubSub;       
+
+                // widget is busy constructing
+                this.editables.rendered.$.style.cursor='wait';
+              
+                // this is a widget...
+                if(!!this.editor.cksqlite_timer){
+                   // console.log("load cksqlite widget:"+Date.now());
+                   clearTimeout(this.editor.cksqlite_timer);
+                } 
+                this.editor.cksqlite_timer=setTimeout(function(){
+                   // the last loaded widget will publish an init message
+                   this.PubSub.publish('Init',{event:'contentChange',widget:this});
+                   console.log("Init");
+                   this.editables.rendered.$.style.cursor='auto';
+                   this.PubSub.publish('endwait',this);                 
+                }.bind(this),500); // assuming no more than 500ms to load a widget            
+
                 this.editables.rendered.on('click', function() {
                     // alert("rendered clicked");
                     var ref=arguments[0].data.$.srcElement.getAttribute('data-cell');
                     if((ref!=undefined)&&(ref!=null)&&(ref!="")){
-                        refs = ref.split(",");
-                        var row = parseInt(refs[0],10);
-                        var col = parseInt(refs[1],10);
-                        var data = {row:row,col:col,widget:this.widget};
                         // save the index of the new selected object
                         this.widget.element.setAttribute('data-index',ref);
                         this.widget.setData('index', ref);
-                        this.widget.fire('indexChange',data);
+                        // publish index change
+                        var event = {event:'indexChange',widget:this.widget};
+                        this.widget.PubSub.publish(this.widget.data.name,event);
                     }
                 });                
                 
@@ -117,11 +134,24 @@ CKEDITOR.plugins.add('cksqlite', {
                 var select = this.element.data('select');
                 this.setData('select', decodeURI(select));
 
+                var master = this.element.data('master');
+                this.setData('master', master);
+                // subscribing to all master events
+                if((!!master)&&(master!=-1)){
+                   var eventb = this.event.bind(this);
+                   // token is a widget variable which reference the subscribe token
+                   this.token = this.PubSub.subscribe(master,eventb);
+                   this.token = this.PubSub.subscribe('Init',eventb);
+                }
+
+                this.PubSub.subscribe('endwait', function(msg,data){
+                    widget=this;
+                    console.log(msg+" from:"+data.data.name+" to:"+widget.data.name);
+                    widget.editables.rendered.$.style.cursor='auto';        
+                }.bind(this));            
+
                 var index = this.element.data('index');
                 this.setData('index', index);
-
-                var master = this.element.data('master');
-                this.setData('master', master);                
 
                 var name = this.element.data('name');
                 this.setData('name', name);
@@ -152,19 +182,7 @@ CKEDITOR.plugins.add('cksqlite', {
                     this.setData('align', 'right');
                 if (this.element.hasClass('align-center'))
                     this.setData('align', 'center');
-
-                // add this cksqlite instance to the cksqlite List of instances
-                // but after all data is set!
-                // done by the framework
-                // how to register on widget event from another widget
-                // var targetwidget = <widget>.findCksqlite('<name>');
-                // targetwidget.on('<event>',function(){
-                //    .... process what's needed ....     
-                // });
-                // cksqlite events
-                // 'indexChange' => data = {row:row,col:col,widget:<origin widget>};
-                // 'rendered' => data <origin widget>
-                
+               
             },
             
             // Listen on the widget#data event which is fired every time the widget data changes
@@ -172,7 +190,6 @@ CKEDITOR.plugins.add('cksqlite', {
             // Data may be changed by using the widget.setData() method, used in the widget dialog window.			
             data: function() {
                 // SQL data
-                this.subscribeMaster('indexChange',this);
                 var format = this.data.format;
                 var content = this.data.content;
                 var template = this.data.template;
@@ -318,8 +335,8 @@ CKEDITOR.plugins.add('cksqlite', {
                            if((master_widget.data.content!=undefined)&&(master_widget.data.content!=null)){
                               var content = JSON.parse(master_widget.data.content);
                               if((content!=undefined)&&(content!=null)){
-                                 if((content[0][column_name]!=undefined)&&(content[0][column_name]!=null)){
-                                     var index = parseInt(master_widget.data.index.split()[0],10);
+                                 var index = parseInt(master_widget.data.index.split()[0],10);
+                                 if((!!content[index])&&(content[index][column_name]!=undefined)&&(content[index][column_name]!=null)){                                    
                                      path = path.substring(0,n+1)+content[index][column_name];
                                  }
                               }
@@ -331,35 +348,20 @@ CKEDITOR.plugins.add('cksqlite', {
                   var sqlData = CKEDITOR.restajax.getjson(url);
                   return sqlData;     
             },
-            subscribeMaster: function(event,widget){                        
-                if(!!!widget.master){                                          
-                    widget.master = {};
-                }
-                if((!!widget.data.master)&&(widget.data.master!="-1")){
-                  var masterwidget = widget.findCksqlite(widget.data.master);
-                  if(!!masterwidget){
-                     if(!!widget.retry&&(widget.retry[event])) delete widget.retry[event];
-                       if(( widget.master[event]==undefined) || ( widget.master[event]==undefined)  ){
-                           // register event only once per event                   
-                           widget.master[event] = masterwidget.on(event,widget.event,null,widget);                      
-                       }
-                   } else {
-                   // need to retry
-                     if(!!!widget.retry) widget.retry={};
-                     widget.retry = setTimeout(widget.subscribeMaster,100,event,widget);
-                     return null;
-                   }
-                 }                
-            },
-            event: function(event){
-                // this is the subscribing widget
-                // event.event the type of event
-                if(event.name=='indexChange'){
-                    var widget = event.listenerData;
+            event: function(msg,data){
+                console.log(msg+" "+" event:"+data.event+" from:"+data.widget.data.name+" to:"+this.data.name);
+                // msg = master (must be unique) which published the event
+                // data = {event:'event',widget:widget}            
+                if((data.event=='indexChange')||(data.event=='contentChange')){
+                    var widget = this;
+                    // reset index
+                    widget.data.index="0,0";  // not a setData to avoid bubbling
                     // recompute content
                     var sqlData = widget.getContent();
                     widget.setData('content',JSON.stringify(sqlData));
-                }
+                    // widget.fire('contentChange',this);
+                    widget.PubSub.publish(this.data.name,{event:'contentChange',widget:widget});
+                }                
             },
             sprintf: function(format) {
                 // Check for format definition

@@ -9,6 +9,28 @@ $clients = [];
 *
 * ArrestDB 1.9.0 (github.com/alixaxel/ArrestDB/)
 * Copyright (c) 2014 Alix Axel <alix.axel@gmail.com>
+* @copyright 2016 Gilbert Brault (see github)
+* 
+* GET .../<table>                    	all the records of table
+* GET .../<table>/<column>/<value>  	all the records of table where column content like or = (num) value
+*                                       %25 = % := any char
+*                                       _ := one char
+* GET .../<table>/<num>                 return record num if 'id' is the primary integer index
+* GET modifiers                         ?limit=<num> (return at most <num> records)
+*                                       ?by=<column>[order=ASC|DESC]
+* DELETE .../<table>/<num>   			delete record which id=<num>
+* DELETE .../<table>/<column>/<value>   delete record which column=<value> (todo)
+* 
+* with data packet
+* PUT    .../<table>/<um>               Update database item where id=<num> with PUT data 
+* PUT    .../<table>/<column>/<value>   Update database item where column=<value> with PUT data (todo)
+*                                       (all writable data needed)
+* POST   .../<table>   					Create record in database with POST data 
+* 
+* History
+* 20-03-2016  Corrected UTF-8 encoding
+* 27-03-2016  Added documentation for URL access
+* 
 **/
 if (!function_exists('json_last_error_msg')){
     function json_last_error_msg()

@@ -17,42 +17,6 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 			{
 				id: 'info',
 				elements: [
-				    /*
-					{
-						id:'identity',
-    					type: 'vbox',
-    					align: 'right',
-    					width: '200px',
-    					children: [
-        					{
-           					 	type: 'text',
-            					id: 'age',
-            					label: 'Age'
-        					},
-        					{
-            					type: 'text',
-            					id: 'sex',
-            					label: 'Sex'
-        					},
-        					{
-            					type: 'text',
-            					id: 'nationality',
-            					label: 'Nationality'
-        					}
-    					]
-					},									
-					{ // ne marche pas
-            			id: 'tab1',
-            			label: '',
-            			title: '',
-            			elements: [
-                					{
-                    					type: 'html',
-                    					html: '<div id="myDiv">Sample <b>text</b>.</div><div id="otherId">Another div.</div>'
-               						 }
-            				]
-        			},
-        			*/
 				    {
 						id:'functions',
     					type: 'hbox',
@@ -100,11 +64,11 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 								type: 'text',
 								label: 'Rest SQL Url (ArrestDB)',
 								width: '250px',
-								setup: function( widget ) {
-									this.setValue( widget.data.select );
+								setup: function( widget ) {																	
 									// save the widget context into the dialog to be able to use widget functions
 									// must be in the first elements
 									this.getDialog().widget = widget;
+									this.setValue( widget.data.select );	
 									var sqlData = widget.getContent(widget.data.select,widget.data.master);
                    				    this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
 								},
@@ -136,13 +100,22 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 									widget.setData( 'name', this.getValue() );
 								},
 								onChange: function(api){
-                    				// may fire an event to tell name has changed
-                    				// must check it's unique
-                    				var widget = this.getDialog().widget;
-                    				var w = widget.findCksqlite(this.getValue());
-                    				if((w!=null)&&(w!=widget)){
-                    					// name not unique...
-                    					this.getDialog().getContentElement('info','name').setValue('Invalid');
+									var widget = this.getDialog().widget;
+									var name = this.getValue();
+                    				// if name has changed, links may be broken
+                    				// forbid changing name if not new
+                    				if (!!!widget.data.name){
+										// new but ...
+                    					// must check it's unique
+                    					var w = widget.findCksqlite(name);
+                    					if((w!=null)&&(w!=widget)){
+                    						// name not unique... add an underscore
+                    						this.getDialog().getContentElement('info','name').setValue(name+"_");
+                    					}
+                    				} else {
+                    					if(name != widget.data.name){
+                    						this.getDialog().getContentElement('info','name').setValue(widget.data.name);
+                    					}
                     				}
 								}
 
@@ -176,6 +149,14 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 									// the column name is the token before the value
 									var widget = this.getDialog().widget;
 									if((widget!=undefined)&&(widget!=null)){
+										// if already subscribed, unsubscribe
+										if(!!widget.token){
+											widget.PubSub.unsubscribe(widget.token);
+										}
+										// now subscribe to the new master
+										var eventb = widget.event.bind(widget);
+                   						// token is a widget variable which reference the subscribe token
+                   						widget.token = widget.PubSub.subscribe(this.getValue(),eventb);
 										widget.data.master=this.getValue(); // don't want to trigger data event
 										var sqlData = widget.getContent();
                    				    	this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));

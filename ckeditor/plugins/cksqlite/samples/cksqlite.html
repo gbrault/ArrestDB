@@ -7,9 +7,11 @@ Copyright (c) 2016, Gilbert Brault All rights reserved.
 	<title>Tutorial &mdash; CKEditor Rest SQL Widget for ArrestDB</title>
 	<meta charset="utf-8">
 	<script src="../../../ckeditor.js"></script>
+	<script src="../../../pubsub.js"></script>
 	<link href="../../../samples/css/samples.css" rel="stylesheet">
 </head>
 <body>
+<div id='wrapper'>
 	<h1 class="samples">
 		Tutorial &mdash; CKEditor Rest SQL Widget for ArrestDB
 	</h1>
@@ -18,6 +20,7 @@ Copyright (c) 2016, Gilbert Brault All rights reserved.
 	</textarea>
 
 <script>
+
 document.onreadystatechange = function () {
   if (document.readyState == "complete") {
 
@@ -74,14 +77,13 @@ document.onreadystatechange = function () {
     	});
     	
     	CKEDITOR.instances.editor1.on("dataReady", function(event){
-		    // when all setup is done
-		    /*
-      		 for(var widget in CKEDITOR.instances.editor1.widgets.instances){	 	
-           		widget.master=widget.subscribeMaster('indexChange');
-       		}
-       		*/
+       		CKEDITOR.instances.editor1.window.PubSub=PubSub;
     	});
 
+    	CKEDITOR.instances.editor1.on("instanceReady", function(event){
+    		
+    	});
+    	
     	CKEDITOR.instances.editor1.on("configLoaded", function(event){
     		
     	});
@@ -90,13 +92,12 @@ document.onreadystatechange = function () {
     		
     	});
 
-    	CKEDITOR.instances.editor1.on("contentDom", function(event){
-    		
+    	CKEDITOR.instances.editor1.on("contentDom", function(event){    		
     	});
   }
 }
 
 	</script>
-
+</div>
 </body>
 </html>
