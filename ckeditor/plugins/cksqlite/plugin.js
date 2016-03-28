@@ -24,7 +24,7 @@ CKEDITOR.plugins.add('cksqlite', {
             // Read more about the Advanced Content Filter here:
             // * http://docs.ckeditor.com/#!/guide/dev_advanced_content_filter
             // * http://docs.ckeditor.com/#!/guide/plugin_sdk_integration_with_acf
-            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-select,!data-name,data-master, !data-content, data-type,!data-format,!data-template,data-index,!data-rendered]{width};' + 
+            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-select,!data-name, data-page, data-offset,data-master, !data-content, data-type,!data-format,!data-template,data-index,!data-rendered]{width};' + 
             'div(!cksqlite-rendered)[title];',
             
             // Minimum HTML which is required by this widget to work.
@@ -95,6 +95,25 @@ CKEDITOR.plugins.add('cksqlite', {
                     alert("widget selectChange");
                 });
                 */
+                this.on('key',function(evt){
+                    console.log(evt.data.keyCode);
+                    // 34 page down, 33 page up
+                    // receive the keys when widget selected
+                    var page = parseInt(this.data.page);
+                    var offset = parseInt(this.data.offset);
+                    if (evt.data.keyCode==34){
+                       offset += page; 
+                    }                    
+                    if (evt.data.keyCode==33){
+                        offset -=page;
+                        if(offset<0) offset=0;
+                    }
+                    this.element.setAttribute('data-offset',""+offset);
+                    this.data.offset = ""+offset;
+                    var sqlData = JSON.stringify(widget.getContent());
+                    this.element.setAttribute('data-content',encodeURI(sqlData));
+                    this.setData('content',sqlData);   
+                });
                 // the following 4 lines must be at the bigenning of init function
                 // makes sure we can reference widget from the nested editable
                 this.editables.rendered.widget = this;
@@ -150,6 +169,23 @@ CKEDITOR.plugins.add('cksqlite', {
                     widget.editables.rendered.$.style.cursor='auto';        
                 }.bind(this));            
 
+                var page = this.element.data('page');
+                this.setData('page', page);
+
+                var offset = this.element.data('offset');
+                if(!!!offset|| ((!!offset)&&(offset=="NaN"))) { 
+                   offset="0";
+                   this.element.setAttribute('data-offset',offset);
+                }
+                var ioffset = parseInt(offset);
+                if(isNaN(ioffset)){
+                  offset="0";
+                  this.element.setAttribute('data-offset',offset);
+                }      
+                               
+                this.setData('offset', offset);
+
+
                 var index = this.element.data('index');
                 this.setData('index', index);
 
@@ -197,7 +233,6 @@ CKEDITOR.plugins.add('cksqlite', {
                 this.element.setAttribute('data-rendered',rendered);
                 this.setData('rendered', rendered);
                 this.editables.rendered.setHtml(rendered);
-                this.fire('rendered',this);
                 
                 // positionning
                 if (this.data.width == '')
@@ -344,7 +379,15 @@ CKEDITOR.plugins.add('cksqlite', {
                         }   
                      }
                   }
-                  var url = "/ArrestDB/ArrestDB.php" + path;                  
+                  if(!!this.data.page){
+                     path += "?limit="+this.data.page
+                  } else {
+                     path += "?limit=10";
+                  }
+                  if(!!this.data.offset){
+                     path+="&offset="+this.data.offset;
+                  }                 
+                  var url = "/ArrestDB/ArrestDB.php" + path;
                   var sqlData = CKEDITOR.restajax.getjson(url);
                   return sqlData;     
             },

@@ -57,7 +57,7 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 				    {
 						id:'references',
     					type: 'hbox',
-   	 					widths: [ '50%', '50%' ],
+   	 					widths: [ '25%', '25%' , '25%' , '25%'],
     					children: [        														
 							{
 								id: 'select',
@@ -120,6 +120,29 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 								}
 
 							},
+							{
+								id: 'page',
+								type: 'text',
+								label: 'Request Limit (Page)',
+								width: '150px',
+								setup: function( widget ) {																	
+									this.setValue( widget.data.page );	
+								},
+								commit: function( widget ) {
+									// persist into DOM
+									widget.element.setAttribute('data-page',this.getValue());
+									widget.setData( 'page', this.getValue() );
+								},
+								onChange: function(api){
+									var widget = this.getDialog().widget;
+									if((widget!=undefined)&&(widget!=null)){
+										widget.data.page = this.getValue(); // don't want to fire data
+										// when I change the page size, I need to refresh content
+										var sqlData = widget.getContent();
+                   				    	this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
+                   				    }
+								}
+							},							
 							{
 								id: 'master',
 								type: 'select',
