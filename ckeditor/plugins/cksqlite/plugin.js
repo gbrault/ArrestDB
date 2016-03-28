@@ -110,9 +110,12 @@ CKEDITOR.plugins.add('cksqlite', {
                     }
                     this.element.setAttribute('data-offset',""+offset);
                     this.data.offset = ""+offset;
-                    var sqlData = JSON.stringify(widget.getContent());
-                    this.element.setAttribute('data-content',encodeURI(sqlData));
-                    this.setData('content',sqlData);   
+                    var content = this.getContent();
+                    if((!!!content.error)&&!!(content.length)){
+                        var sqlData = JSON.stringify(content);                    
+                        this.element.setAttribute('data-content',encodeURI(sqlData));
+                        this.setData('content',sqlData);                                
+                    } 
                 });
                 // the following 4 lines must be at the bigenning of init function
                 // makes sure we can reference widget from the nested editable
@@ -140,6 +143,9 @@ CKEDITOR.plugins.add('cksqlite', {
                     // alert("rendered clicked");
                     var ref=arguments[0].data.$.srcElement.getAttribute('data-cell');
                     if((ref!=undefined)&&(ref!=null)&&(ref!="")){
+                        //reset the offset
+                        this.widget.element.setAttribute('data-offset',offset);
+                        this.widget.data.offset="0";
                         // save the index of the new selected object
                         this.widget.element.setAttribute('data-index',ref);
                         this.widget.setData('index', ref);
