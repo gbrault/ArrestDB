@@ -171,7 +171,7 @@ CKEDITOR.plugins.add('cksqlite', {
 
                 this.PubSub.subscribe('endwait', function(msg,data){
                     widget=this;
-                    console.log(msg+" from:"+data.data.name+" to:"+widget.data.name);
+                    console.log(msg+" from:"+data.data.name+" to:"+widget.data.name+" "+Date.now());
                     widget.editables.rendered.$.style.cursor='auto';        
                 }.bind(this));            
 
@@ -261,6 +261,7 @@ CKEDITOR.plugins.add('cksqlite', {
               var content = JSON.parse(content);
               var out = this.formatData(content,format);
               var output='<table class="cksqlite-render">';
+              /*
               for(i=0; i<content.length;i++){
                  var rendered_template = template;
                  rendered_template=rendered_template.replace(new RegExp('\\$row\\$','g'),""+i);
@@ -269,6 +270,20 @@ CKEDITOR.plugins.add('cksqlite', {
                     rendered_template = rendered_template.replace(r,out[i][formatList[j].variable]);
                  }
                  output += rendered_template;
+              }*/
+              var tokenizer = new Tokenizer([/\$(\w+)\$/],function( src, real, re ){
+                                return real ? src.replace(re,function(all,name){
+                                                  return content[i][name];
+                                              }) : src;
+                                }
+                              );
+
+              for(i=0; i<content.length;i++){
+                        var rendered_template = template;
+                        rendered_template=rendered_template.replace(new RegExp('\\$row\\$','g'),""+i);
+                        var tpl = rendered_template;
+                        var tokens = tokenizer.parse(tpl);
+                        output += tokens.join('');
               }
               output += '</table>' ;   
               return output;    
@@ -398,7 +413,7 @@ CKEDITOR.plugins.add('cksqlite', {
                   return sqlData;     
             },
             event: function(msg,data){
-                console.log(msg+" "+" event:"+data.event+" from:"+data.widget.data.name+" to:"+this.data.name);
+                console.log(msg+" "+" event:"+data.event+" from:"+data.widget.data.name+" to:"+this.data.name+" "+Date.now());
                 // msg = master (must be unique) which published the event
                 // data = {event:'event',widget:widget}            
                 if((data.event=='indexChange')||(data.event=='contentChange')){
