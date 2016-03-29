@@ -123,8 +123,8 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 							{
 								id: 'page',
 								type: 'text',
-								label: 'Request Limit (Page)',
-								width: '150px',
+								label: '?limit=',
+								width: '75px',
 								setup: function( widget ) {																	
 									this.setValue( widget.data.page );	
 								},
@@ -137,6 +137,29 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 									var widget = this.getDialog().widget;
 									if((widget!=undefined)&&(widget!=null)){
 										widget.data.page = this.getValue(); // don't want to fire data
+										// when I change the page size, I need to refresh content
+										var sqlData = widget.getContent();
+                   				    	this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
+                   				    }
+								}
+							},							
+							{
+								id: 'offset',
+								type: 'text',
+								label: '?offset=',
+								width: '75px',
+								setup: function( widget ) {																	
+									this.setValue( widget.data.offset );	
+								},
+								commit: function( widget ) {
+									// persist into DOM
+									widget.element.setAttribute('data-offset',this.getValue());
+									widget.setData( 'offset', this.getValue() );
+								},
+								onChange: function(api){
+									var widget = this.getDialog().widget;
+									if((widget!=undefined)&&(widget!=null)){
+										widget.data.offset = this.getValue(); // don't want to fire data
 										// when I change the page size, I need to refresh content
 										var sqlData = widget.getContent();
                    				    	this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));

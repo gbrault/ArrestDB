@@ -176,6 +176,15 @@ CKEDITOR.plugins.add('cksqlite', {
                 }.bind(this));            
 
                 var page = this.element.data('page');
+                if(!!!page){
+                   page="10";
+                   this.element.setAttribute('data-page',page);
+                }
+                var ipage= parseInt(page);
+                if(isNaN(ipage)){
+                   page="10";
+                   this.element.setAttribute('data-page',page);
+                }
                 this.setData('page', page);
 
                 var offset = this.element.data('offset');
