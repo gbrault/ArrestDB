@@ -4,6 +4,27 @@
  * cksqlite plugin (widget to display database chuncks)
  *
  */
+ /**
+ * to do
+ * 1- reengineer the data storage of document widget data (very poor performance now)
+ * 2- see a document with parameters = parametric documents
+ * 
+ * 1- add a data storage with the document in the sqlite database
+ * 1- save it as a json object
+ * 1- while loading the document attach the data blob to editor instance
+ * 1- access from the widget: wiget.editor.cksqlite[widget.data.name].<widget parameter>
+ * 1- data stored as javascript objet in-memory and as json in the database
+ *
+ * 2- Parametric document: add parameters to the calling url respecting the url syntax
+ * 2- exemple: <serverpath>cksqlite.html?doc=facture&client=ALFAKI&order=10364
+ * 2- to get the bill of ALFAKI order 10364
+ * 2- save parameters as a json object into the database
+ * 2- create a list of document instances as a table in the database
+ * 2- can then browse 'created' documents using this table
+ * 2- the paradygm is then to browse this table which is an avatar of clerk job
+ * 2- in this table must put more than the parameters
+ * 2- date of creation, who have created it, seen it... with dates and may be more 
+ */
 // Register the plugin within the editor.
 CKEDITOR.plugins.add('cksqlite', {
     // This plugin requires the Widgets System defined in the 'widget' and the 'ajax' plugins.
