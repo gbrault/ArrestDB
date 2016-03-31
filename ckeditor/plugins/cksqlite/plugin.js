@@ -126,27 +126,7 @@ CKEDITOR.plugins.add('cksqlite', {
                    if(!!this.editor.cksqlite[this.data.name])
                         delete this.editor.cksqlite[this.data.name];      
                 });
-                this.on('key',function(evt){
-                    console.log(evt.data.keyCode);
-                    // 34 page down, 33 page up
-                    // receive the keys when widget selected
-                    var page = parseInt(this.data.page);
-                    var offset = parseInt(this.data.offset);
-                    if (evt.data.keyCode==34){
-                       offset += page; 
-                    }                    
-                    if (evt.data.keyCode==33){
-                        offset -=page;
-                        if(offset<0) offset=0;
-                    }
-                    this.editor.cksqlite[this.data.name].offset = offset;
-                    var content = this.getContent();
-                    if((!!!content.error)&&!!(content.length)){
-                        var sqlData = JSON.stringify(content);                    
-                        this.editor.cksqlite[this.data.name].content=sqlData;  
-                    } 
-                });
-                // the following 4 lines must be at the bigenning of init function
+               // the following 4 lines must be at the bigenning of init function
                 // makes sure we can reference widget from the nested editable
                 this.editables.rendered.widget = this;
                 // attach the PubSub Communication Object to this widget
@@ -179,7 +159,34 @@ CKEDITOR.plugins.add('cksqlite', {
                         this.widget.PubSub.publish(this.widget.data.name,event);
                     }
                 });                
-                
+                this.on('key',function(evt){
+                    console.log(evt.data.keyCode);
+                    // 34 page down, 33 page up
+                    // receive the keys when widget selected
+                    var page = this.editor.cksqlite[this.data.name].page;
+                    var offset = this.editor.cksqlite[this.data.name].offset;
+                    if (evt.data.keyCode==34){
+                       offset += page; 
+                    }                    
+                    if (evt.data.keyCode==33){
+                        offset -=page;
+                        if(offset<0) offset=0;
+                    }
+                    this.editor.cksqlite[this.data.name].offset = offset;
+                    var content = this.getContent();
+                    if((!!!content.error)&&!!(content.length)){
+                        var sqlData = JSON.stringify(content);                    
+                        this.editor.cksqlite[this.data.name].content=sqlData;
+                        // warn change 
+					    this.setData('refresh',"0");
+					    this.setData('refresh',"1");									
+                        this.editor.cksqlite[this.data.name].index="0,0";
+                        // publish index change
+                        var event = {event:'indexChange',widget:this};
+                        this.PubSub.publish(this.data.name,event);
+                    } 
+                });
+                 
                 // SQL parameters from persisted attributes
                 var name = this.element.data('name');
                 if(!!!name) name="new name";
