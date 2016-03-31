@@ -116,6 +116,9 @@ CKEDITOR.plugins.add('cksqlite', {
                     alert("widget selectChange");
                 });
                 */
+                // prerequisite editor should have the cksqlite object attached create it if not
+                if(this.editor.cksqlite==undefined)
+                      this.editor.cksqlite = {};
                 this.on( 'doubleclick', function( evt ) {
                         console.log( 'widget#doubleclick' );
                         }, null, null, 5 );
@@ -169,12 +172,8 @@ CKEDITOR.plugins.add('cksqlite', {
                     // alert("rendered clicked");
                     var ref=arguments[0].data.$.srcElement.getAttribute('data-cell');
                     if((ref!=undefined)&&(ref!=null)&&(ref!="")){
-                        //reset the offset
-                        this.widget.element.setAttribute('data-offset',offset);
-                        this.widget.data.offset="0";
                         // save the index of the new selected object
-                        this.widget.element.setAttribute('data-index',ref);
-                        this.widget.setData('index', ref);
+                        this.widget.editor.cksqlite[this.widget.data.name].index=ref;
                         // publish index change
                         var event = {event:'indexChange',widget:this.widget};
                         this.widget.PubSub.publish(this.widget.data.name,event);
@@ -443,11 +442,15 @@ CKEDITOR.plugins.add('cksqlite', {
                      var column_name = path.substring(0,n);
                      var m = column_name.lastIndexOf("/");
                      column_name = column_name.substring(m+1);
-                     var master_widget = this.findCksqlite(this.data.master);
+                     var master_widget = this.findCksqlite(this.editor.cksqlite[this.data.name].master);
                      var index = this.editor.cksqlite[master_widget.data.name].index;
+                     if((index==undefined)||(index==null)){
+                         // set the index to 0,0
+                         index=this.editor.cksqlite[master_widget.data.name].index="0,0";
+                     }
                      var content = this.editor.cksqlite[master_widget.data.name].content;
                      if((master_widget!=undefined)&&(master_widget!=null)){                        
-                        if((index!=undefined)&&(index!=null)){
+                        
                            if((content!=undefined)&&(content!=null)){
                               content = JSON.parse(content);
                               if((content!=undefined)&&(content!=null)){
@@ -457,7 +460,7 @@ CKEDITOR.plugins.add('cksqlite', {
                                  }
                               }
                            }                           
-                        }   
+                          
                      }
                   }
                   if(!!this.editor.cksqlite[this.data.name].page){
@@ -480,12 +483,16 @@ CKEDITOR.plugins.add('cksqlite', {
                 if((data.event=='indexChange')||(data.event=='contentChange')){
                     var widget = this;
                     // reset index
-                    widget.data.index="0,0";  // not a setData to avoid bubbling
+                    this.editor.cksqlite[this.data.name].index="0,0";
+                    // reset the offset
+                    this.editor.cksqlite[this.data.name].offset=0;
                     // recompute content
                     var sqlData = widget.getContent();
                     // widget.setData('content',JSON.stringify(sqlData));
                     this.editor.cksqlite[this.data.name].content=JSON.stringify(sqlData);
                     // widget.fire('contentChange',this);
+					widget.setData('refresh',"0");
+					widget.setData('refresh',"1");									
                     widget.PubSub.publish(this.data.name,{event:'contentChange',widget:widget});
                 }                
             },
