@@ -1,6 +1,7 @@
 <?php
 
-$dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sl3';
+// $dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sl3';
+$dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sqlite';
 $clients = [];
 
 /**
@@ -593,7 +594,8 @@ class ArrestDB
 			$bitmask |= (defined('JSON_' . $option) === true) ? constant('JSON_' . $option) : 0;
 		}
 		
-		self::Encode($data);
+		// self::Encode($data);
+		// no need to encode in UTF-8 if the database was created with UTF-8
 
 		if (($result = json_encode($data, $bitmask)) !== false)
 		{
