@@ -185,7 +185,7 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 									for(var i=0; i<options.length; i++){
 										this.add(options[i][0], options[i][1]);
 									}
-									this.setValue( widget.data.master );							
+									this.setValue( widget.editor.cksqlite[widget.data.name].master );							
 								},
 								// When committing (saving) this field, set its value to the widget data.
 								commit: function( widget ) {
