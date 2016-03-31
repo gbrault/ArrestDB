@@ -67,20 +67,23 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 								setup: function( widget ) {																	
 									// save the widget context into the dialog to be able to use widget functions
 									// must be in the first elements
-									this.getDialog().widget = widget;
-									this.setValue( widget.data.select );	
-									var sqlData = widget.getContent(widget.data.select,widget.data.master);
+									this.getDialog().start=true; // tell it's the dialog boot
+									this.getDialog().widget = widget;									
+									this.setValue( widget.editor.cksqlite[widget.data.name].select );	
+									var sqlData = widget.getContent();
                    				    this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
 								},
 								commit: function( widget ) {
-									// persist into DOM
-									widget.element.setAttribute('data-select',encodeURI(this.getValue()));
-									widget.setData( 'select', this.getValue() );
+									// persist into DOM									
+									widget.setData('refresh',"0");
+									widget.setData('refresh',"1");									
+									widget.editor.cksqlite[widget.data.name].select=this.getValue();									
 								},
 								onChange: function(api){
+									if (this.getDialog().start) return;
 									var widget = this.getDialog().widget;
 									if((widget!=undefined)&&(widget!=null)){
-										widget.data.select = this.getValue(); // don't want to fire data
+										widget.editor.cksqlite[widget.data.name].select = this.getValue();
 										var sqlData = widget.getContent();
                    				    	this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
                    				    }
@@ -95,8 +98,7 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 									this.setValue( widget.data.name );
 								},
 								commit: function( widget ) {
-									// persist into DOM
-									widget.element.setAttribute('data-name',this.getValue());
+									widget.element.setAttribute('data-name',this.getValue());																	
 									widget.setData( 'name', this.getValue() );
 								},
 								onChange: function(api){
@@ -104,14 +106,20 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 									var name = this.getValue();
                     				// if name has changed, links may be broken
                     				// forbid changing name if not new
-                    				if (!!!widget.data.name){
+                    				if (widget.data.name=='new name'){
 										// new but ...
-                    					// must check it's unique
+                    					// must check it's unique (and cannot rename for now...)
                     					var w = widget.findCksqlite(name);
                     					if((w!=null)&&(w!=widget)){
                     						// name not unique... add an underscore
-                    						this.getDialog().getContentElement('info','name').setValue(name+"_");
+                    						name = name+"_";
+                    						this.getDialog().getContentElement('info','name').setValue(name);
                     					}
+                    					// copy all attribute to the new name
+                    					var copie = Object.assign({},widget.editor.cksqlite[widget.data.name]);
+                    					delete widget.editor.cksqlite[widget.data.name];
+                    					widget.editor.cksqlite[name]=copie;
+                    					widget.data.name=name;
                     				} else {
                     					if(name != widget.data.name){
                     						this.getDialog().getContentElement('info','name').setValue(widget.data.name);
@@ -126,17 +134,16 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 								label: '?limit=',
 								width: '75px',
 								setup: function( widget ) {																	
-									this.setValue( widget.data.page );	
+									this.setValue( widget.editor.cksqlite[widget.data.name].page );	
 								},
 								commit: function( widget ) {
-									// persist into DOM
-									widget.element.setAttribute('data-page',this.getValue());
-									widget.setData( 'page', this.getValue() );
+									widget.editor.cksqlite[widget.data.name].page=parseInt(this.getValue());									
 								},
 								onChange: function(api){
+									if (this.getDialog().start) return;
 									var widget = this.getDialog().widget;
 									if((widget!=undefined)&&(widget!=null)){
-										widget.data.page = this.getValue(); // don't want to fire data
+										widget.editor.cksqlite[widget.data.name].page = parseInt(this.getValue());
 										// when I change the page size, I need to refresh content
 										var sqlData = widget.getContent();
                    				    	this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
@@ -149,17 +156,16 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 								label: '?offset=',
 								width: '75px',
 								setup: function( widget ) {																	
-									this.setValue( widget.data.offset );	
+									this.setValue( widget.editor.cksqlite[widget.data.name].offset );	
 								},
 								commit: function( widget ) {
-									// persist into DOM
-									widget.element.setAttribute('data-offset',this.getValue());
-									widget.setData( 'offset', this.getValue() );
+									widget.editor.cksqlite[widget.data.name].offset=parseInt(this.getValue());
 								},
 								onChange: function(api){
+									if (this.getDialog().start) return;
 									var widget = this.getDialog().widget;
 									if((widget!=undefined)&&(widget!=null)){
-										widget.data.offset = this.getValue(); // don't want to fire data
+										widget.editor.cksqlite[widget.data.name].offset=parseInt(this.getValue());
 										// when I change the page size, I need to refresh content
 										var sqlData = widget.getContent();
                    				    	this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
@@ -183,8 +189,7 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 								},
 								// When committing (saving) this field, set its value to the widget data.
 								commit: function( widget ) {
-									widget.element.setAttribute('data-master',this.getValue());
-									widget.setData( 'master', this.getValue() );
+									widget.editor.cksqlite[widget.data.name].master=this.getValue();
 								},
 								onChange: function(api){
 									// need to recompute content
@@ -193,6 +198,7 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 									// 3- select the master link
 									// the sample value is replace by the indexed value from the master
 									// the column name is the token before the value
+									if (this.getDialog().start) { this.getDialog().start=false ; return;}
 									var widget = this.getDialog().widget;
 									if((widget!=undefined)&&(widget!=null)){
 										// if already subscribed, unsubscribe
@@ -203,7 +209,7 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 										var eventb = widget.event.bind(widget);
                    						// token is a widget variable which reference the subscribe token
                    						widget.token = widget.PubSub.subscribe(this.getValue(),eventb);
-										widget.data.master=this.getValue(); // don't want to trigger data event
+									    widget.editor.cksqlite[widget.data.name].master=this.getValue();
 										var sqlData = widget.getContent();
                    				    	this.getDialog().getContentElement('info','content').setValue(JSON.stringify(sqlData));
 									}
@@ -218,13 +224,9 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 						label: 'ArrestDB Content',
 						'default':'',
 						setup: function( widget ) {
-							// this.setValue( widget.data.content );
-							// done by restSqlUrl.onChange event
 						},
 						commit: function( widget ) {
-							// persist into DOM
-							widget.element.setAttribute('data-content',encodeURI(this.getValue()));
-							widget.setData( 'content', this.getValue() );
+							widget.editor.cksqlite[widget.data.name]['content']=this.getValue();
 						}
 					},
 					{
@@ -233,12 +235,10 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 						label: 'Format',
 						'default':'',
 						setup: function( widget ) {
-							this.setValue( widget.data.format );
+							this.setValue(widget.editor.cksqlite[widget.data.name].format );
 						},
 						commit: function( widget ) {
-							// persist into DOM
-							widget.element.setAttribute('data-format',this.getValue());
-							widget.setData( 'format', this.getValue() );
+							widget.editor.cksqlite[widget.data.name].format = this.getValue();
 						}
 					},
 					{
@@ -247,12 +247,10 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 						label: 'Template',
 						'default':'',
 						setup: function( widget ) {
-							this.setValue( widget.data.template );
+							this.setValue( widget.editor.cksqlite[widget.data.name].template );
 						},
 						commit: function( widget ) {
-							// persist into DOM
-							widget.element.setAttribute('data-template',this.getValue());
-							widget.setData( 'template', this.getValue() );
+							widget.editor.cksqlite[widget.data.name].template=this.getValue();
 						}
 					},
 					{
@@ -266,12 +264,11 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 						'default':'horizontal',
 						// When setting up this field, set its value to the "type" value from widget data.
 						setup: function( widget ) {
-							this.setValue( widget.data.type );
+							this.setValue( widget.editor.cksqlite[widget.data.name].type );
 						},
 						// When committing (saving) this field, set its value to the widget data.
 						commit: function( widget ) {
-							widget.element.setAttribute('data-type',this.getValue());
-							widget.setData( 'type', this.getValue() );
+							widget.editor.cksqlite[widget.data.name].type=this.getValue();
 						}
 					},
 					{

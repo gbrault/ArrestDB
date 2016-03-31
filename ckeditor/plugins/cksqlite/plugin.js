@@ -45,7 +45,7 @@ CKEDITOR.plugins.add('cksqlite', {
             // Read more about the Advanced Content Filter here:
             // * http://docs.ckeditor.com/#!/guide/dev_advanced_content_filter
             // * http://docs.ckeditor.com/#!/guide/plugin_sdk_integration_with_acf
-            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-select,!data-name, data-page, data-offset,data-master, !data-content, data-type,!data-format,!data-template,data-index,!data-rendered]{width};' + 
+            allowedContent: 'div(!cksqlite,align-left,align-right,align-center)[!data-name]{width};' + 
             'div(!cksqlite-rendered)[title];',
             
             // Minimum HTML which is required by this widget to work.
@@ -116,6 +116,13 @@ CKEDITOR.plugins.add('cksqlite', {
                     alert("widget selectChange");
                 });
                 */
+                this.on( 'doubleclick', function( evt ) {
+                        console.log( 'widget#doubleclick' );
+                        }, null, null, 5 );
+                this.on('destroy',function(evt){
+                   if(!!this.editor.cksqlite[this.data.name])
+                        delete this.editor.cksqlite[this.data.name];      
+                });
                 this.on('key',function(evt){
                     console.log(evt.data.keyCode);
                     // 34 page down, 33 page up
@@ -129,13 +136,11 @@ CKEDITOR.plugins.add('cksqlite', {
                         offset -=page;
                         if(offset<0) offset=0;
                     }
-                    this.element.setAttribute('data-offset',""+offset);
-                    this.data.offset = ""+offset;
+                    this.editor.cksqlite[this.data.name].offset = offset;
                     var content = this.getContent();
                     if((!!!content.error)&&!!(content.length)){
                         var sqlData = JSON.stringify(content);                    
-                        this.element.setAttribute('data-content',encodeURI(sqlData));
-                        this.setData('content',sqlData);                                
+                        this.editor.cksqlite[this.data.name].content=sqlData;  
                     } 
                 });
                 // the following 4 lines must be at the bigenning of init function
@@ -177,12 +182,24 @@ CKEDITOR.plugins.add('cksqlite', {
                 });                
                 
                 // SQL parameters from persisted attributes
+                var name = this.element.data('name');
+                if(!!!name) name="new name";
+                this.setData('name', name);
+
+                if(this.editor.cksqlite[name]==undefined){
+                    this.editor.cksqlite[name]={};        
+                }
+
+                /*
                 var select = this.element.data('select');
                 this.setData('select', decodeURI(select));
-
+                */
+                /*
                 var master = this.element.data('master');
                 this.setData('master', master);
+                */
                 // subscribing to all master events
+                var master = this.editor.cksqlite[name].master;
                 if((!!master)&&(master!=-1)){
                    var eventb = this.event.bind(this);
                    // token is a widget variable which reference the subscribe token
@@ -196,37 +213,44 @@ CKEDITOR.plugins.add('cksqlite', {
                     widget.editables.rendered.$.style.cursor='auto';        
                 }.bind(this));            
 
+                /*
                 var page = this.element.data('page');
+                */
+                var page = this.editor.cksqlite[name].page;
                 if(!!!page){
-                   page="10";
-                   this.element.setAttribute('data-page',page);
+                   page=10;
+                   // this.element.setAttribute('data-page',page);
+                   this.editor.cksqlite[name].page=page;
                 }
                 var ipage= parseInt(page);
                 if(isNaN(ipage)){
-                   page="10";
+                   page=10;
                    this.element.setAttribute('data-page',page);
+                   this.editor.cksqlite[name].page=page;
                 }
                 this.setData('page', page);
-
+                
+                /*
                 var offset = this.element.data('offset');
+                */
+                var offset = this.editor.cksqlite[name].offset;
                 if(!!!offset|| ((!!offset)&&(offset=="NaN"))) { 
-                   offset="0";
-                   this.element.setAttribute('data-offset',offset);
+                   offset=0;
+                   // this.element.setAttribute('data-offset',offset);
+                   this.editor.cksqlite[name].offset=offset;
                 }
                 var ioffset = parseInt(offset);
                 if(isNaN(ioffset)){
-                  offset="0";
-                  this.element.setAttribute('data-offset',offset);
+                  offset=0;
+                  // this.element.setAttribute('data-offset',offset);
+                  this.editor.cksqlite[name].offset=offset;
                 }      
                                
-                this.setData('offset', offset);
+                // this.setData('offset', offset);
 
-
+                /*
                 var index = this.element.data('index');
                 this.setData('index', index);
-
-                var name = this.element.data('name');
-                this.setData('name', name);
                                          
                 var content = this.element.data('content');
                 this.setData('content', decodeURI(content));
@@ -242,7 +266,8 @@ CKEDITOR.plugins.add('cksqlite', {
 
                 var rendered = this.element.data('rendered');
                 this.setData('rendered', rendered);
-                
+                */
+                // let the other parameters as they are...
                 // Other parameters
                 var width = this.element.getStyle('width');
                 if (width)
@@ -262,12 +287,13 @@ CKEDITOR.plugins.add('cksqlite', {
             // Data may be changed by using the widget.setData() method, used in the widget dialog window.			
             data: function() {
                 // SQL data
-                var format = this.data.format;
-                var content = this.data.content;
-                var template = this.data.template;
+                var format = this.editor.cksqlite[this.data.name].format; // this.data.format;
+                var content = this.editor.cksqlite[this.data.name].content; // this.data.content;
+                var template = this.editor.cksqlite[this.data.name].template; // this.data.template;
                 var rendered = this.render(format,content,template);
-                this.element.setAttribute('data-rendered',rendered);
-                this.setData('rendered', rendered);
+                // this.element.setAttribute('data-rendered',rendered);
+                this.editor.cksqlite[this.data.name].rendered=rendered;
+                // this.setData('rendered', rendered);
                 this.editables.rendered.setHtml(rendered);
                 
                 // positionning
@@ -404,11 +430,13 @@ CKEDITOR.plugins.add('cksqlite', {
             },
             getContent: function(){
                   // test if master mode setData
-                  var path=this.data.select;                  
-                  if((this.data.master!=undefined) &&
-                     (this.data.master!=null) &&
-                     (this.data.master!="") &&
-                     (this.data.master!="-1")){
+               var path=this.editor.cksqlite[this.data.name].select;
+               if((path!=undefined)&&(!!path)){   
+                  var master = this.editor.cksqlite[this.data.name].master;                 
+                  if((master!=undefined) &&
+                     (master!=null) &&
+                     (master!="") &&
+                     (master!="-1")){
                      // this widget is master linked
                      // get the column name of master from select
                      var n = path.lastIndexOf("/");
@@ -416,12 +444,14 @@ CKEDITOR.plugins.add('cksqlite', {
                      var m = column_name.lastIndexOf("/");
                      column_name = column_name.substring(m+1);
                      var master_widget = this.findCksqlite(this.data.master);
+                     var index = this.editor.cksqlite[master_widget.data.name].index;
+                     var content = this.editor.cksqlite[master_widget.data.name].content;
                      if((master_widget!=undefined)&&(master_widget!=null)){                        
-                        if((master_widget.data.index!=undefined)&&(master_widget.data.index!=null)){
-                           if((master_widget.data.content!=undefined)&&(master_widget.data.content!=null)){
-                              var content = JSON.parse(master_widget.data.content);
+                        if((index!=undefined)&&(index!=null)){
+                           if((content!=undefined)&&(content!=null)){
+                              content = JSON.parse(content);
                               if((content!=undefined)&&(content!=null)){
-                                 var index = parseInt(master_widget.data.index.split()[0],10);
+                                 var index = parseInt(index.split()[0],10);
                                  if((!!content[index])&&(content[index][column_name]!=undefined)&&(content[index][column_name]!=null)){                                    
                                      path = path.substring(0,n+1)+content[index][column_name];
                                  }
@@ -430,17 +460,18 @@ CKEDITOR.plugins.add('cksqlite', {
                         }   
                      }
                   }
-                  if(!!this.data.page){
-                     path += "?limit="+this.data.page
+                  if(!!this.editor.cksqlite[this.data.name].page){
+                     path += "?limit="+this.editor.cksqlite[this.data.name].page
                   } else {
                      path += "?limit=10";
                   }
-                  if(!!this.data.offset){
-                     path+="&offset="+this.data.offset;
+                  if(!!this.editor.cksqlite[this.data.name].offset){
+                     path+="&offset="+this.editor.cksqlite[this.data.name].offset;
                   }                 
                   var url = "/ArrestDB/ArrestDB.php" + path;
                   var sqlData = CKEDITOR.restajax.getjson(url);
-                  return sqlData;     
+                  return sqlData;
+               } else return {};
             },
             event: function(msg,data){
                 console.log(msg+" "+" event:"+data.event+" from:"+data.widget.data.name+" to:"+this.data.name+" "+Date.now());
@@ -452,7 +483,8 @@ CKEDITOR.plugins.add('cksqlite', {
                     widget.data.index="0,0";  // not a setData to avoid bubbling
                     // recompute content
                     var sqlData = widget.getContent();
-                    widget.setData('content',JSON.stringify(sqlData));
+                    // widget.setData('content',JSON.stringify(sqlData));
+                    this.editor.cksqlite[this.data.name].content=JSON.stringify(sqlData);
                     // widget.fire('contentChange',this);
                     widget.PubSub.publish(this.data.name,{event:'contentChange',widget:widget});
                 }                

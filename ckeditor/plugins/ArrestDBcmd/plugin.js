@@ -19,8 +19,9 @@
 					// get the id of the current document
 					var doc=CKEDITOR.restajax.getjson("/ArrestDB/ArrestDB.php/Documents/name/"+docref);
 					if(!doc.hasOwnProperty("error")){
+						var blob = JSON.stringify(editor.cksqlite);
 						CKEDITOR.restajax.putjson("/ArrestDB/ArrestDB.php/Documents/"+doc[0].id,
-											{content:doccontent}
+											{content:doccontent,blob:blob}
 											);
 					} else {
 						 if (window.confirm(docref+" Does not exist; Do you want to create it?")){
@@ -28,8 +29,9 @@
      					        doc = CKEDITOR.restajax.postjson("/ArrestDB/ArrestDB.php/Documents/"
      													,{name:docref,content:""});
      							// update it
+     							var blob = JSON.stringify(editor.cksqlite);
      						    CKEDITOR.restajax.putjson("/ArrestDB/ArrestDB.php/Documents/"+doc[0].id,
-											{content:doccontent});
+											{content:doccontent,blob:blob});
      				     }
 					}
 				}

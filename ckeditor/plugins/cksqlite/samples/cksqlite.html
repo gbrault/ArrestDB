@@ -22,21 +22,6 @@ Copyright (c) 2016, Gilbert Brault All rights reserved.
 
 <script>
 
-/*
-var values = { name:'Joe', age:32, surname:'Smith' };
-var tokenizer = new Tokenizer([
-    /<%(\w+)%>/, /\$(\w+)/
- ],function( src, real, re ){
-    return real ? src.replace(re,function(all,name){
-       return values[name];
-    }) : src;
-  }
-);
-var tpl = '<%name%> $surname is $age years old.';
-var tokens = tokenizer.parse(tpl);
-var out = tokens.join('');
-*/
-
 document.onreadystatechange = function () {
   if (document.readyState == "complete") {
 
@@ -77,13 +62,14 @@ document.onreadystatechange = function () {
      		if(!!docref){     	
      			// get the content
      			var doc = CKEDITOR.restajax.getjson("/ArrestDB/ArrestDB.php/Documents/name/"+docref);
-     			if(!doc.hasOwnProperty("error")){   			
-     				CKEDITOR.instances.editor1.setData(doc[0].content,{noSnapshot:true});     				
+     			if(!doc.hasOwnProperty("error")){
+     				CKEDITOR.instances.editor1.cksqlite = JSON.parse(doc[0].blob);  			
+     				CKEDITOR.instances.editor1.setData(doc[0].content,{noSnapshot:true});      				
      			} else {
      				if (window.confirm(docref+" Does not exist; Do you want to create it?")){
      				// code 204 = no content with this name => create it!
      					doc = CKEDITOR.restajax.postjson("/ArrestDB/ArrestDB.php/Documents/"
-     													,{name:docref,content:""});
+     													,{name:docref,content:"",blob:"{}"});
      				}
      			}
      		}
