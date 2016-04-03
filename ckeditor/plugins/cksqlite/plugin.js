@@ -292,16 +292,7 @@ CKEDITOR.plugins.add('cksqlite', {
             // and updates the widget's view.
             // Data may be changed by using the widget.setData() method, used in the widget dialog window.			
             data: function() {
-                // SQL data
-                var format = this.editor.cksqlite[this.data.name].format; // this.data.format;
-                var content = this.editor.cksqlite[this.data.name].content; // this.data.content;
-                var template = this.editor.cksqlite[this.data.name].template; // this.data.template;
-                var rendered = this.render(format,content,template);
-                // this.element.setAttribute('data-rendered',rendered);
-                this.editor.cksqlite[this.data.name].rendered=rendered;
-                // this.setData('rendered', rendered);
-                this.editables.rendered.setHtml(rendered);
-                
+                this.refresh();
                 // positionning
                 if (this.data.width == '')
                     this.element.removeStyle('width');
@@ -315,7 +306,18 @@ CKEDITOR.plugins.add('cksqlite', {
                 if (this.data.align)
                     this.element.addClass('align-' + this.data.align);
             },
-           render: function(format, content, template){
+            refresh: function(){
+                // SQL data
+                var format = this.editor.cksqlite[this.data.name].format; // this.data.format;
+                var content = this.editor.cksqlite[this.data.name].content; // this.data.content;
+                var template = this.editor.cksqlite[this.data.name].template; // this.data.template;
+                var rendered = this.render(format,content,template);
+                // this.element.setAttribute('data-rendered',rendered);
+                this.editor.cksqlite[this.data.name].rendered=rendered;
+                // this.setData('rendered', rendered);
+                this.editables.rendered.setHtml(rendered);                        
+            },
+            render: function(format, content, template){
               // with filtered data and template issue the html patch
               var i,j;
               if((format==null)||(content==null)||(template==null)) return "";
@@ -503,6 +505,20 @@ CKEDITOR.plugins.add('cksqlite', {
                     widget.PubSub.publish(this.data.name,{event:'contentChange',widget:widget});
                 }                
             },
+            insertCss: function ( code ) {
+                        var style = document.createElement('style');
+                        style.type = 'text/css';
+
+                        if (style.styleSheet) {
+                                    // IE
+                                    style.styleSheet.cssText = code;
+                        } else {
+                                    // Other browsers
+                                    style.innerHTML = code;
+                        }
+
+                        document.getElementsByTagName("head")[0].appendChild( style );
+            },            
             sprintf: function(format) {
                 // Check for format definition
                 if (typeof format != 'string') {

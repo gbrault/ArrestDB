@@ -251,6 +251,14 @@ CKEDITOR.dialog.add( 'cksqlite', function( editor ) {
 						},
 						commit: function( widget ) {
 							widget.editor.cksqlite[widget.data.name].template=this.getValue();
+						},
+						onChange: function(api){
+							if (this.getDialog().start) return;
+							var widget = this.getDialog().widget;
+							if((widget==undefined)||(widget==null))return;
+							// update widget rendering
+							widget.editor.cksqlite[widget.data.name].template=this.getValue();
+							widget.refresh();
 						}
 					},
 					{

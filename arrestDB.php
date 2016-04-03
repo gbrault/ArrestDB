@@ -1,5 +1,6 @@
 <?php
-
+session_start();
+require('security.php');
 // $dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sl3';
 $dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sqlite';
 $clients = [];

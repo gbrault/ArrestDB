@@ -52,7 +52,7 @@ document.onreadystatechange = function () {
 				{ name: 'styles' },
 				{ name: 'about' }
 			],
-			removePlugins: 'font,iframe,flash,stylescombo,print,smiley,pastetext,pastefromword'
+			removePlugins: 'font,iframe,flash,stylescombo,print,smiley,pastetext,pastefromword'		
 		} );
 
 		CKEDITOR.instances.editor1.on("instanceReady", function(event)
@@ -70,6 +70,8 @@ document.onreadystatechange = function () {
      				// code 204 = no content with this name => create it!
      					doc = CKEDITOR.restajax.postjson("/ArrestDB/ArrestDB.php/Documents/"
      													,{name:docref,content:"",blob:"{}"});
+     				    CKEDITOR.instances.editor1.cksqlite ={};
+     				    CKEDITOR.instances.editor1.setData("",{noSnapshot:true});
      				}
      			}
      		}
