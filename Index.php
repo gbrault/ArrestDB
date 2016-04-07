@@ -11,6 +11,7 @@ require('security.php')
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="icon" href="favicon.ico" type="image/x-icon">
 	</head>
 	<body id="top">
 	    <!-- encryption key receievd from server -->
@@ -669,11 +670,18 @@ print 'It took ' + i + ' iterations to sort the deck.';
 					&copy; Untitled. All rights reserved.
 				</div>
 			</footer>
+			
+	
+
 
 		<!-- Scripts -->
 			<script src="assets/js/skel.min.js"></script>
 			<script src="assets/js/main.js"></script>
 			<script src="ckeditor/ckeditor.js"></script>
+			
+<div style="display:none;">
+<textarea id="hideneditor" ></textarea>
+</div>
 
 	</body>
 </html>
