@@ -88,6 +88,7 @@
 	  var	$login = document.querySelector('#login');
 	  $login.addEventListener('click',function(event){
 	      console.log('login');
+	      /*
 	        if(($login.innerText=="Logout")||(key==undefined)){
 				window.location.href ="/ArrestDB/logout.php";
 				$login.innerText="Login";
@@ -101,6 +102,9 @@
 	  	    	// Need to set GUID
 	  	    	window.location.href ="/ArrestDB/logout.php";
 	  	    }
+	  	    */
+	  	   CKEDITOR.instances.hideneditor.ui.get('testOnlyButton').click(CKEDITOR.instances.hideneditor)
+	  	   
 	  });
 	  
 	  var $test = document.querySelector('#test');
@@ -115,8 +119,28 @@
 			  	var $value = CKEDITOR.restajax.getjson('/ArrestDB/test.php');
 			  	console.log($value);
 			  }
-		   }
+		   }		   
 	  });
+	  
+ document.onreadystatechange = function () {
+  if (document.readyState == "complete") {	  
+	  if(CKEDITOR.instances.hideneditor==undefined){
+		CKEDITOR.replace( 'hideneditor', {
+		} );
+		var editor = CKEDITOR.instances.hideneditor;
+		var href = document.location.href.split( '/' );
+		href.pop();
+		href.push( 'login.js' );
+		href = href.join( '/' );
+		CKEDITOR.dialog.add('testOnly',href);		
+		editor.addCommand( 'testOnlyCmd', new CKEDITOR.dialogCommand( 'testOnly' ) );
+		editor.ui.add( 'testOnlyButton', CKEDITOR.UI_BUTTON, {
+					label: 'testOnlyCmd',
+					command: 'testOnlyCmd'
+		});	
+	  }
+  }
+ }
 })();
 
 // login
