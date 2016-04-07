@@ -16,7 +16,19 @@ CKEDITOR.dialog.add( 'testOnly', function( editor ) {
                         label:          'Test Text 1',
                         id:             'testText1',
                         'default':      'hello world!'
-                    }
+                    },
+                    {
+    					type: 'text',
+    					id: 'name',
+    					label: 'Your name',
+    					'default': '',
+    					validate: function(api) {
+        						if ( !this.getValue() ) {
+        							editor.say('Name cannot be empty.');
+            						return false;
+        						}
+    					}
+					}
                 ]
             }
         ]
