@@ -678,6 +678,9 @@ print 'It took ' + i + ' iterations to sort the deck.';
 			<script src="assets/js/skel.min.js"></script>
 			<script src="assets/js/main.js"></script>
 			<script src="ckeditor/ckeditor.js"></script>
+			<script src="scripts/aes/aes.js">/* AES JavaScript implementation */</script>
+			<script src="scripts/aes/aes-ctr.js">/* AES Counter Mode implementation */</script>
+
 			
 <div style="display:none;">
 <textarea id="hideneditor" ></textarea>

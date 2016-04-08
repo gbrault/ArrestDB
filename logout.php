@@ -1,5 +1,8 @@
 <?php
     session_start();
     session_destroy();
-    header('Location: /ArrestDB/index.php');
+    session_start();
+    require('security.php');
+    header('Content-Type: application/json');
+    echo json_encode(['key' => $_SESSION["after"]]);
 ?>
