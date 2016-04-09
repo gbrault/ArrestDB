@@ -26,6 +26,7 @@ document.onreadystatechange = function () {
   if (document.readyState == "complete") {
 
 		CKEDITOR.replace( 'editor1', {
+			repository: {script: '/ArrestDB/ArrestDB.php/', table:'Reports', column:'name'},
 			// Load the cksqlite plugin.
 			extraPlugins: 'cksqlite,ArrestDBcmd,pagebreak,sourcedialog,codemirror,preview',
 
@@ -61,7 +62,11 @@ document.onreadystatechange = function () {
      		var docref = window.location.search.substring(1);
      		if(!!docref){     	
      			// get the content
-     			var doc = CKEDITOR.restajax.getjson("/ArrestDB/ArrestDB.php/Documents/name/"+docref);
+     			var uri=event.editor.config.repository.script+
+     					event.editor.config.repository.table+"/"+
+     					event.editor.config.repository.column+"/"+
+     					docref;
+     			var doc = CKEDITOR.restajax.getjson(uri);
      			if(!doc.hasOwnProperty("error")){
      				CKEDITOR.instances.editor1.cksqlite = JSON.parse(doc[0].blob);  			
      				CKEDITOR.instances.editor1.setData(doc[0].content,{noSnapshot:true});      				

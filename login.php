@@ -29,6 +29,8 @@ if(strcasecmp($_SERVER['REQUEST_METHOD'], 'GET') === 0){
 			if(strcasecmp($dpassword,$password)===0){
 				header('Content-Type: application/json');
 				unset($result[0]->password);
+				// save it in the session
+				$_SESSION['user']=$result[0];
 				$result = json_encode($result[0]);
 				echo $result;
 				return;					

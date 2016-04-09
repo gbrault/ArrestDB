@@ -207,6 +207,88 @@
 		*/
 		
 	  }
+	CKEDITOR.replace( 'editor1', {
+		    readOnly: true,
+		    toolbarCanCollapse: true,
+		    toolbarStartupExpanded: false,
+		    allowedContent: true,
+			repository: {script: '/ArrestDB/ArrestDB.php/', table:'Pages', column:'name'},
+			// Load the cksqlite plugin.
+			extraPlugins: 'ArrestDBcmd,preview',
+
+			// Besides editor's main stylesheet load also cksqlite styles.
+			// In the usual case they can be added to the main stylesheet.
+			contentsCss: [
+				'assets/css/main.css'
+			],
+
+			// The following options are set to make the sample more clear for demonstration purposes.
+
+			// Set height to make more content visible.
+			height: 500,
+			// Rearrange toolbar groups and remove unnecessary plugins.
+			toolbarGroups: [
+				{ name: 'clipboard',   groups: [ 'clipboard', 'undo' ] },
+				{ name: 'links' },
+				{ name: 'insert' },
+				{ name: 'document',	   groups: [ 'mode' ] },
+				// '/',
+				{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
+				{ name: 'paragraph',   groups: [ 'list', 'indent' ] },
+				{ name: 'styles' },
+				{ name: 'about' }
+			],
+			removePlugins: 'pastetext,pastefromword'		
+		} );
+
+	CKEDITOR.instances.editor1.on("instanceReady", function(event)
+	{
+     		//triggered after the editor is setup
+     		var docref = window.location.search.substring(1);
+     		if(!!docref){     	
+     			// get the content
+     			var uri=event.editor.config.repository.script+
+     					event.editor.config.repository.table+"/"+
+     					event.editor.config.repository.column+"/"+
+     					docref;
+     			var doc = CKEDITOR.restajax.getjson(uri);
+     			if(!doc.hasOwnProperty("error")){
+     				CKEDITOR.instances.editor1.cksqlite = JSON.parse(doc[0].blob);  			
+     				CKEDITOR.instances.editor1.setData(doc[0].content,{noSnapshot:true});      				
+     			} else {
+     				if (window.confirm(docref+" Does not exist; Do you want to create it?")){
+     				// code 204 = no content with this name => create it!
+     					doc = CKEDITOR.restajax.postjson("/ArrestDB/ArrestDB.php/Documents/"
+     													,{name:docref,content:"",blob:"{}"});
+     				    CKEDITOR.instances.editor1.cksqlite ={};
+     				    CKEDITOR.instances.editor1.setData("",{noSnapshot:true});
+     				}
+     			}
+     		}
+	});
+
+	CKEDITOR.instances.editor1.on("focus", function(event){       
+    });
+    	
+    CKEDITOR.instances.editor1.on("dataReady", function(event){
+       		CKEDITOR.instances.editor1.window.PubSub=PubSub;
+    });
+
+    CKEDITOR.instances.editor1.on("instanceReady", function(event){
+    		
+    });
+    	
+    CKEDITOR.instances.editor1.on("configLoaded", function(event){
+    		
+    });
+
+    CKEDITOR.instances.editor1.on("loaded", function(event){
+    		
+    });
+
+    CKEDITOR.instances.editor1.on("contentDom", function(event){    
+    		
+    });
   }
  }
 })();

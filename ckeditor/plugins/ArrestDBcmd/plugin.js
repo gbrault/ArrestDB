@@ -16,21 +16,28 @@
 				var docref = window.location.search.substring(1);
 				if(!!docref){
 					var doccontent = editor.getData();
+					var uritable=editor.config.repository.script+
+     					editor.config.repository.table+"/";
+     				var uridoc= uritable+
+     					editor.config.repository.column+"/"+
+     					docref;     				
 					// get the id of the current document
-					var doc=CKEDITOR.restajax.getjson("/ArrestDB/ArrestDB.php/Documents/name/"+docref);
+					var doc=CKEDITOR.restajax.getjson(uridoc);
 					if(!doc.hasOwnProperty("error")){
+						var uriid=uritable+"/"+doc[0].id;
 						var blob = JSON.stringify(editor.cksqlite);
-						CKEDITOR.restajax.putjson("/ArrestDB/ArrestDB.php/Documents/"+doc[0].id,
+						CKEDITOR.restajax.putjson(uriid,
 											{content:doccontent,blob:blob}
 											);
 					} else {
 						 if (window.confirm(docref+" Does not exist; Do you want to create it?")){
      				            // create it!
-     					        doc = CKEDITOR.restajax.postjson("/ArrestDB/ArrestDB.php/Documents/"
+     					        doc = CKEDITOR.restajax.postjson(uritable
      													,{name:docref,content:""});
      							// update it
      							var blob = JSON.stringify(editor.cksqlite);
-     						    CKEDITOR.restajax.putjson("/ArrestDB/ArrestDB.php/Documents/"+doc[0].id,
+     							var uriid=uritable+"/"+doc[0].id;
+     						    CKEDITOR.restajax.putjson(uriid,
 											{content:doccontent,blob:blob});
      				     }
 					}
