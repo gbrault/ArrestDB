@@ -72,6 +72,8 @@ CKEDITOR.dialog.add( 'login', function( editor ) {
 									// user.Last = last name
 									// user.user = user id
 									window.user=user;
+									PubSub.publish('user',
+											        user);
 								}
 							} else{
 								editor.say('UserID and/or Password cannot be empty.');

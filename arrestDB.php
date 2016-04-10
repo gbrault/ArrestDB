@@ -20,6 +20,7 @@ $clients = [];
 * GET .../<table>/<num>                 return record num if 'id' is the primary integer index
 * GET modifiers                         ?limit=<num> (return at most <num> records)
 *                                       ?by=<column>[order=ASC|DESC]
+*                                       ?columns="<col1>,<col2>,<col3>" (returns only those columns)
 * DELETE .../<table>/<num>   			delete record which id=<num>
 * DELETE .../<table>/<column>/<value>   delete record which column=<value> (todo)
 * 
@@ -32,6 +33,7 @@ $clients = [];
 * History
 * 20-03-2016  Corrected UTF-8 encoding
 * 27-03-2016  Added documentation for URL access
+* 10-04-2016  Added Select with column list (?columns="<col1>,<col2>,<col3>")
 * 
 **/
 if (!function_exists('json_last_error_msg')){
@@ -87,9 +89,15 @@ else if (array_key_exists('HTTP_X_HTTP_METHOD_OVERRIDE', $_SERVER) === true)
 
 ArrestDB::Serve('GET', '/(#any)/(#any)/(#any)', function ($table, $id, $data)
 {
+    $select = sprintf('SELECT * FROM "%s"', $table);
+    if (isset($_GET['columns']) === true){
+    	$columns = trim($_GET['columns'],'"');
+		$select = sprintf('SELECT %s FROM "%s"', $columns, $table);	
+    }
+	
 	$query = array
 	(
-		sprintf('SELECT * FROM "%s"', $table),
+		$select,
 		sprintf('WHERE "%s" %s ?', $id, (ctype_digit($data) === true) ? '=' : 'LIKE'),
 	);
 
@@ -131,9 +139,16 @@ ArrestDB::Serve('GET', '/(#any)/(#any)/(#any)', function ($table, $id, $data)
 
 ArrestDB::Serve('GET', '/(#any)/(#num)?', function ($table, $id = null)
 {
+	// use ` to quote a column name with blanks for example
+    $select = sprintf('SELECT * FROM "%s"', $table);
+    if (isset($_GET['columns']) === true){
+    	$columns = trim($_GET['columns'],'"');
+		$select = sprintf('SELECT %s FROM "%s"', $columns, $table);	
+    }
+	
 	$query = array
 	(
-		sprintf('SELECT * FROM "%s"', $table),
+		$select
 	);
 	
 

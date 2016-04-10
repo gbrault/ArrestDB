@@ -88,31 +88,24 @@
 	  var	$login = document.querySelector('#login');
 	  $login.addEventListener('click',function(event){
 	      console.log('login');
-	      /*
-	        if(($login.innerText=="Logout")||(key==undefined)){
-				window.location.href ="/ArrestDB/logout.php";
-				$login.innerText="Login";
-			}
-	  	    if(localStorage.getItem('arrestdb_GUID')){
-	  	    	// save the encoding key value
-	  	    	// GUID is stored
-	  	    	// 'log'' the user
-	  	    	$login.innerText="Logout";
-	  	    } else {
-	  	    	// Need to set GUID
-	  	    	window.location.href ="/ArrestDB/logout.php";
-	  	    }
-	  	    */
-	  	  if((key==undefined)||(key==null)){
+	  	  var logout = ($login.innerText=="Logout");
+	  	  if(($login.innerText=="Logout")||(window.key==undefined)||(window.key==null)){
 		  	var jkey = CKEDITOR.restajax.load("/ArrestDB/logout.php");
 		  	var res = JSON.parse(jkey);
-		  	key = res.key;
+		  	window.key = res.key;
+		  	$login.innerText="Login";
+		  	if (window.user) delete window.user;
 		  }
-	  	  var editor = CKEDITOR.instances.hideneditor;
-	  	  // editor.ui.get('loginButton').click(editor);
-	  	  if((editor.DialogPending==undefined)||(editor.DialogPending==false)){
+		  if(!logout){
+		    var editor = CKEDITOR.instances.hideneditor;
+	  	  	// editor.ui.get('loginButton').click(editor);
+	  	  	if((editor.DialogPending==undefined)||(editor.DialogPending==false)){
           		editor.DialogPending = true;
 	  	  		editor.openDialog('login', editor.waitDialog);		  	
+		  	}
+		  	PubSub.subscribe('user', function(msg,data){                    		  	
+				this.innerText="Logout";
+			}.bind(login));		  	
 		  }
 	  });
 	  
@@ -197,14 +190,6 @@
 		href.push( 'login.js' );
 		href = href.join( '/' );
 		CKEDITOR.dialog.add('login',href);	
-		/*	
-		editor.addCommand( 'loginCmd',
-					new CKEDITOR.dialogCommand( 'login' ));
-		editor.ui.add( 'loginButton', CKEDITOR.UI_BUTTON, {
-					label: 'loginCmd',
-					command: 'loginCmd'
-		});
-		*/
 		
 	  }
 	CKEDITOR.replace( 'editor1', {
@@ -222,10 +207,8 @@
 				'assets/css/main.css'
 			],
 
-			// The following options are set to make the sample more clear for demonstration purposes.
-
 			// Set height to make more content visible.
-			height: 500,
+			height: Math.trunc(window.innerHeight/2),
 			// Rearrange toolbar groups and remove unnecessary plugins.
 			toolbarGroups: [
 				{ name: 'clipboard',   groups: [ 'clipboard', 'undo' ] },
@@ -245,26 +228,8 @@
 	{
      		//triggered after the editor is setup
      		var docref = window.location.search.substring(1);
-     		if(!!docref){     	
-     			// get the content
-     			var uri=event.editor.config.repository.script+
-     					event.editor.config.repository.table+"/"+
-     					event.editor.config.repository.column+"/"+
-     					docref;
-     			var doc = CKEDITOR.restajax.getjson(uri);
-     			if(!doc.hasOwnProperty("error")){
-     				CKEDITOR.instances.editor1.cksqlite = JSON.parse(doc[0].blob);  			
-     				CKEDITOR.instances.editor1.setData(doc[0].content,{noSnapshot:true});      				
-     			} else {
-     				if (window.confirm(docref+" Does not exist; Do you want to create it?")){
-     				// code 204 = no content with this name => create it!
-     					doc = CKEDITOR.restajax.postjson("/ArrestDB/ArrestDB.php/Documents/"
-     													,{name:docref,content:"",blob:"{}"});
-     				    CKEDITOR.instances.editor1.cksqlite ={};
-     				    CKEDITOR.instances.editor1.setData("",{noSnapshot:true});
-     				}
-     			}
-     		}
+     		var bloadpage = loadpage.bind(event.editor);
+     		bloadpage(docref);    			
 	});
 
 	CKEDITOR.instances.editor1.on("focus", function(event){       
@@ -293,13 +258,68 @@
  }
 })();
 
-// aes session key
-var key;
-function setSessionKey(){
-	var $key=document.querySelector("#key");  	  
-	if($key.value!="after"){ 
-   		key = $key.value; 		
-	}	
+function getEditorFrame(editor){
+	return window.document.querySelectorAll('iframe[title="Rich Text Editor, '+editor.name+'"]')[0];
 }
-setSessionKey();
+function Navigate(seditor,tag){
+	var editor = CKEDITOR.instances[seditor];
+	var f = getEditorFrame(editor);
+	f.contentWindow.scrollTo(0,f.contentDocument.getElementById(tag).offsetTop);
+}
+
+function Leftmenu(editor){
+	// get a List of all Site Pages = content of Pages table
+	var uri=editor.config.repository.script+'Pages?columns="id,name';
+	var list = CKEDITOR.restajax.getjson(uri);
+	if((list)&&(!list.error)){
+		var html="";
+		if(window.loader==undefined) window.loader={};
+		window.loader[editor.name] = loadpage.bind(editor);
+		for(var i=0; i<list.length; i++){
+			html += '<li><a href="#" onclick="loader.'+editor.name+'('+
+			        "'"+list[i].name+"'"+');">'+list[i].name+'</a></li>';
+		}
+		var	$leftmenu = document.querySelector('#leftmenu');
+		$leftmenu.innerHTML=html;
+	}
+}
+
+function loadpage(docref){
+    if(!docref){
+ 			  docref="main";  // default document...
+ 	}   	
+	// get the content
+	var editor = this;
+	var uri=editor.config.repository.script+
+			editor.config.repository.table+"/"+
+			editor.config.repository.column+"/"+
+			docref;
+	var doc = CKEDITOR.restajax.getjson(uri);
+	if(!doc.hasOwnProperty("error")){
+		editor.cksqlite = JSON.parse(doc[0].blob);  			
+		editor.setData(doc[0].content,{noSnapshot:true});
+		var banner=document.querySelector('#banner');
+		if((banner)&&(doc[0].banner.length!=0)){
+				banner.innerHTML=doc[0].banner;
+				banner.style.display='inherit';
+			}
+			setTimeout(function(){
+				   window.scrollTo(0,
+						window.document.getElementById("top").offsetTop);
+				   Leftmenu(editor);		
+				}.bind(editor)
+			,1000);
+				
+	} else {
+		if (window.confirm(docref+" Does not exist; Do you want to create it?")){
+		// code 204 = no content with this name => create it!
+		    var uri = editor.config.repository.script+
+			editor.config.repository.table+"/";
+			doc = CKEDITOR.restajax.postjson(uri,
+											{name:docref,content:"",blob:"{}",banner:""});
+		    editor.cksqlite ={};
+		    editor.setData("",{noSnapshot:true});
+		}
+	}
+}
 

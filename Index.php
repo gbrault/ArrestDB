@@ -4,7 +4,7 @@ require('security.php')
 ?>
 
 <!DOCTYPE HTML>
-<!-- rlite v0.0.1 | (c) gbrault | MIT licensed -->
+<!-- rlite v0.0.1 | (c) gbrault 2016 | MIT licensed -->
 <html>
 	<head>
 		<title>Rlite</title>
@@ -14,8 +14,6 @@ require('security.php')
 		<link rel="icon" href="favicon.ico" type="image/x-icon">
 	</head>
 	<body id="top">
-	    <!-- encryption key receievd from server -->
-        <input id="key" type="hidden" value='<?php echo $_SESSION["key"]; ?>'>
 		<!-- Header -->
 			<header id="header">
 				<h1><a href="#">Rlite</a></h1>
@@ -26,6 +24,8 @@ require('security.php')
 			<nav id="nav">
 				<ul class="links">
 					<li><a href="#top">Top</a></li>
+				</ul>
+				<ul id="leftmenu" class="links">				
 					<li><a href="#content">Content</a></li>
 					<li><a href="#elements">Elements</a></li>
 					<li><a href="#grid">Grid System</a></li>
@@ -38,19 +38,12 @@ require('security.php')
 			</nav>
 
 		<!-- Banner -->
-			<section id="banner">
-				<h2>Welcome to Rlite</h2>
-				<p>A super simple starting point for SQLITE Report projects.</p>
-				<ul class="actions">
-					<li><a href="#content" class="button special">Content</a></li>
-					<li><a href="#elements" class="button">Elements</a></li>
-					<li><a href="#grid" class="button alt">Grid System</a></li>
-				</ul>
+			<section id="banner" style="display:none;">
+				<!-- loaded with the document (todo: banner editor)-->
 			</section>
 
 		<!-- Main -->
-	<textarea id="editor1" cols="10" rows="10">
-	</textarea>	
+	<textarea id="editor1"></textarea>	
 
 		<!-- Footer -->
 			<footer id="footer">
