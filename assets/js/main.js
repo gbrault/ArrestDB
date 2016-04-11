@@ -259,7 +259,13 @@
 })();
 
 function getEditorFrame(editor){
-	return window.document.querySelectorAll('iframe[title="Rich Text Editor, '+editor.name+'"]')[0];
+	var ifs = window.document.querySelectorAll('iframe');
+	for(var i=0; i<ifs.length;i++){
+		if(ifs[i].title.indexOf(editor.name)>-1){
+			return ifs[i];
+		}
+	}
+	return null;
 }
 function Navigate(seditor,tag){
 	var editor = CKEDITOR.instances[seditor];
