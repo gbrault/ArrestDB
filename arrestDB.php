@@ -21,6 +21,7 @@ $clients = [];
 * GET modifiers                         ?limit=<num> (return at most <num> records)
 *                                       ?by=<column>[order=ASC|DESC]
 *                                       ?columns="<col1>,<col2>,<col3>" (returns only those columns)
+* 										?count (superseed all other modifiers)
 * DELETE .../<table>/<num>   			delete record which id=<num>
 * DELETE .../<table>/<column>/<value>   delete record which column=<value> (todo)
 * 
@@ -34,6 +35,7 @@ $clients = [];
 * 20-03-2016  Corrected UTF-8 encoding
 * 27-03-2016  Added documentation for URL access
 * 10-04-2016  Added Select with column list (?columns="<col1>,<col2>,<col3>")
+* 11-04-2016  Added count GET modifier
 * 
 **/
 if (!function_exists('json_last_error_msg')){
@@ -94,6 +96,10 @@ ArrestDB::Serve('GET', '/(#any)/(#any)/(#any)', function ($table, $id, $data)
     	$columns = trim($_GET['columns'],'"');
 		$select = sprintf('SELECT %s FROM "%s"', $columns, $table);	
     }
+    
+    if(isset($_GET['count'])=== true){
+    	$select = sprintf('SELECT count(*) as count FROM "%s"', $table);
+    }
 	
 	$query = array
 	(
@@ -145,6 +151,11 @@ ArrestDB::Serve('GET', '/(#any)/(#num)?', function ($table, $id = null)
     	$columns = trim($_GET['columns'],'"');
 		$select = sprintf('SELECT %s FROM "%s"', $columns, $table);	
     }
+    
+    if(isset($_GET['count'])=== true){
+    	$select = sprintf('SELECT count(*) as count FROM "%s"', $table);
+    }
+
 	
 	$query = array
 	(
