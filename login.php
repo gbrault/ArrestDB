@@ -20,7 +20,7 @@ if(strcasecmp($_SERVER['REQUEST_METHOD'], 'GET') === 0){
  		if ($_SERVER["SERVER_PORT"] != "80") {
   			$serverURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"];
  		} else {
-  			$serverURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+  			$serverURL .= $_SERVER["SERVER_NAME"];
  		}
  		$serverURL .= "/ArrestDB/ArrestDB.php/users/user/$user";
 		$result=json_decode($webClient->Navigate($serverURL ));
