@@ -1,12 +1,9 @@
 /* skel-baseline v3.0.1 | (c) n33 | skel.io | MIT licensed */
 
+(function() {
 
-var main = function() {
 	"use strict";
-// need to have skel loaded	
-if(window.skel==undefined){
-	setTimeout(main,100);
-} else {	
+
 	// Methods/polyfills.
 
 		// addEventsListener
@@ -126,9 +123,74 @@ if(window.skel==undefined){
 			  }
 		   }		   
 	  });
+	  
+ document.onreadystatechange = function () {
+  if (document.readyState == "complete") {	  
+	CKEDITOR.replace( 'editor1', {
+		    readOnly: true,
+		    toolbarCanCollapse: true,
+		    toolbarStartupExpanded: false,
+		    allowedContent: true,
+			repository: {script: '/ArrestDB/ArrestDB.php/', table:'Pages', column:'name'},
+			// Load the cksqlite plugin.
+			extraPlugins: 'ArrestDBcmd,preview',
+
+			// Besides editor's main stylesheet load also cksqlite styles.
+			// In the usual case they can be added to the main stylesheet.
+			contentsCss: [
+				'assets/css/main.css'
+			],
+
+			// Set height to make more content visible.
+			height: Math.trunc(window.innerHeight/2),
+			// Rearrange toolbar groups and remove unnecessary plugins.
+			toolbarGroups: [
+				{ name: 'clipboard',   groups: [ 'clipboard', 'undo' ] },
+				{ name: 'links' },
+				{ name: 'insert' },
+				{ name: 'document',	   groups: [ 'mode' ] },
+				// '/',
+				{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
+				{ name: 'paragraph',   groups: [ 'list', 'indent' ] },
+				{ name: 'styles' },
+				{ name: 'about' }
+			],
+			removePlugins: 'pastetext,pastefromword'		
+		} );
+
+	CKEDITOR.instances.editor1.on("instanceReady", function(event)
+	{
+     		//triggered after the editor is setup
+     		var docref = window.location.search.substring(1);
+     		var bloadpage = loadpage.bind(event.editor);
+     		bloadpage(docref);    			
+	});
+
+	CKEDITOR.instances.editor1.on("focus", function(event){       
+    });
+    	
+    CKEDITOR.instances.editor1.on("dataReady", function(event){
+       		CKEDITOR.instances.editor1.window.PubSub=PubSub;
+    });
+
+    CKEDITOR.instances.editor1.on("instanceReady", function(event){
+    		
+    });
+    	
+    CKEDITOR.instances.editor1.on("configLoaded", function(event){
+    		
+    });
+
+    CKEDITOR.instances.editor1.on("loaded", function(event){
+    		
+    });
+
+    CKEDITOR.instances.editor1.on("contentDom", function(event){    
+    		
+    });
+  }
  }
-};
-main();
+})();
 
 function getEditorFrame(editor){
 	var ifs = window.document.querySelectorAll('iframe');
@@ -143,5 +205,61 @@ function Navigate(seditor,tag){
 	var editor = CKEDITOR.instances[seditor];
 	var f = getEditorFrame(editor);
 	f.contentWindow.scrollTo(0,f.contentDocument.getElementById(tag).offsetTop);
+}
+
+function Leftmenu(editor){
+	// get a List of all Site Pages = content of Pages table
+	var uri=editor.config.repository.script+'Pages?columns="id,name';
+	var list = CKEDITOR.restajax.getjson(uri);
+	if((list)&&(!list.error)){
+		var html="";
+		if(window.loader==undefined) window.loader={};
+		window.loader[editor.name] = loadpage.bind(editor);
+		for(var i=0; i<list.length; i++){
+			html += '<li><a href="#" onclick="loader.'+editor.name+'('+
+			        "'"+list[i].name+"'"+');">'+list[i].name+'</a></li>';
+		}
+		var	$leftmenu = document.querySelector('#leftmenu');
+		$leftmenu.innerHTML=html;
+	}
+}
+
+function loadpage(docref){
+    if(!docref){
+ 			  docref="main";  // default document...
+ 	}   	
+	// get the content
+	var editor = this;
+	var uri=editor.config.repository.script+
+			editor.config.repository.table+"/"+
+			editor.config.repository.column+"/"+
+			docref;
+	var doc = CKEDITOR.restajax.getjson(uri);
+	if(!doc.hasOwnProperty("error")){
+		editor.cksqlite = JSON.parse(doc[0].blob);  			
+		editor.setData(doc[0].content,{noSnapshot:true});
+		var banner=document.querySelector('#banner');
+		if((banner)&&(doc[0].banner.length!=0)){
+				banner.innerHTML=doc[0].banner;
+				banner.style.display='inherit';
+			}
+			setTimeout(function(){
+				   window.scrollTo(0,
+						window.document.getElementById("top").offsetTop);
+				   Leftmenu(editor);		
+				}.bind(editor)
+			,1000);
+				
+	} else {
+		if (window.confirm(docref+" Does not exist; Do you want to create it?")){
+		// code 204 = no content with this name => create it!
+		    var uri = editor.config.repository.script+
+			editor.config.repository.table+"/";
+			doc = CKEDITOR.restajax.postjson(uri,
+											{name:docref,content:"",blob:"{}",banner:""});
+		    editor.cksqlite ={};
+		    editor.setData("",{noSnapshot:true});
+		}
+	}
 }
 

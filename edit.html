@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table, td {
+    border: 1px solid black;
+}
+</style>
+</head>
+<body>
+<table style="border: 0px;">
+<tr>
+<td>
+<select id="SelectPage">
+  <option value="new">new</option>
+  <option value="page1">page1</option>
+  <option value="page2">page2</option>
+  <option value="page3">page3</option>
+</select>
+</td>
+<td><button id="newPageName" onclick="newPage()">new</button></td>
+</tr>
+<tr><td>
+<table id="myTable">
+<thead>
+<tr><th>1</th><th>2</th><th><a href="#" onclick="plus(event)">+&nbsp;</a></th></tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+</td>
+</tr>
+</table>
+<dialog id="newPage">
+  <p>New Page</p>
+  <input type="text" id="return_value" value="" placeholder="Enter Page name">
+  <button id="close">Enter</button>
+</dialog>
+<script>
+document.querySelector('#SelectPage').onchange = function(event) {
+	if(event.target.value=='new'){
+		document.getElementById("newPageName").style.visibility="inherit";
+	} else{
+		document.getElementById("newPageName").style.visibility="hidden";
+	}
+};
+document.querySelector('#close').onclick = function() {
+  var dialog = document.getElementById("newPage");
+  var value = document.querySelector('#return_value').value;
+  dialog.close(value);
+};
+var count =0;
+function down(event){
+	var x = event.clientX, 
+		y = event.clientY,
+	   element = document.elementFromPoint(x, y), 
+	   row=element.parentElement.parentElement,
+	   table=row.parentElement;
+	   var rowIndex = element.parentElement.parentElement.rowIndex;
+	   if(rowIndex==table.rows.length-1) return;
+	   for(var i=0; i< row.cells.length; i++){
+	   	   var temp = table.rows[rowIndex+1].cells[i].innerHTML;
+	   	   table.rows[rowIndex+1].cells[i].innerHTML=table.rows[rowIndex].cells[i].innerHTML;
+	   	   table.rows[rowIndex].cells[i].innerHTML=temp;
+	   }
+}
+function up(event){
+	var x = event.clientX, 
+		y = event.clientY,
+	   element = document.elementFromPoint(x, y), 
+	   row=element.parentElement.parentElement,
+	   table=row.parentElement;
+	   var rowIndex = element.parentElement.parentElement.rowIndex;
+	   if(rowIndex==1) return;
+	   for(var i=0; i< row.cells.length; i++){
+	   	   var temp = table.rows[rowIndex-1].cells[i].innerHTML;
+	   	   table.rows[rowIndex-1].cells[i].innerHTML=table.rows[rowIndex].cells[i].innerHTML;
+	   	   table.rows[rowIndex].cells[i].innerHTML=temp;
+	   }
+}
+function minus(event){
+	var x = event.clientX, 
+		y = event.clientY,
+	   element = document.elementFromPoint(x, y), 
+	   row=element.parentElement.parentElement,
+	   table=row.parentElement;
+	   var rowIndex = element.parentElement.parentElement.rowIndex;
+	   table.deleteRow(rowIndex);
+}
+function plus(event){
+	var x = event.clientX, 
+		y = event.clientY,
+	   element = document.elementFromPoint(x, y), 
+	   row=element.parentElement.parentElement,
+	   table=row.parentElement;
+	var rowIndex = 1+element.parentElement.parentElement.rowIndex;
+    var row = table.insertRow(rowIndex);
+    var cell0 = row.insertCell(0);
+    var cell1 = row.insertCell(1);
+    var cell2 = row.insertCell(2);
+    cell0.innerHTML = "NEW CELL1:"+(count++) ;
+    cell1.innerHTML = "NEW CELL2:"+(count++);
+    cell2.innerHTML = '<a href="#" onclick="plus(event)">+&nbsp;</a><a href="#" onclick="minus(event)">-&nbsp;</a><a href="#" onclick="up(event)">&uarr;&nbsp;</a><a href="#" onclick="down(event)">&darr;&nbsp;</a>';
+}
+function newPage(){
+	var dialog = document.getElementById("newPage");
+	dialog.showModal();
+}
+</script>
+
+</body>
+</html>
