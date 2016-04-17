@@ -89,6 +89,9 @@ if(window.skel==undefined){
 				});
 
 	  var	$login = document.querySelector('#login');
+	  if(window.user){
+	  	$login.innerText="Logout";
+	  }
 	  $login.addEventListener('click',function(event){
 	      console.log('login');
 	  	  var logout = ($login.innerText=="Logout");
@@ -97,7 +100,10 @@ if(window.skel==undefined){
 		  	var res = JSON.parse(jkey);
 		  	window.key = res.key;
 		  	$login.innerText="Login";
-		  	if (window.user) delete window.user;
+		  	if (window.user) {
+		  		delete window.user;
+		  	    PubSub.publish('user',null);
+		  	}
 		  }
 		  if(!logout){
 		    var editor = CKEDITOR.instances.hideneditor;
@@ -106,8 +112,10 @@ if(window.skel==undefined){
           		editor.DialogPending = true;
 	  	  		editor.openDialog('login', editor.waitDialog);		  	
 		  	}
-		  	PubSub.subscribe('user', function(msg,data){                    		  	
-				this.innerText="Logout";
+		  	PubSub.subscribe('user', function(msg,data){ 
+		  		if((data!=undefined)&&(data!=null)){
+					this.innerText="Logout";
+				}                   		  					
 			}.bind(login));		  	
 		  }
 	  });
@@ -129,19 +137,3 @@ if(window.skel==undefined){
  }
 };
 main();
-
-function getEditorFrame(editor){
-	var ifs = window.document.querySelectorAll('iframe');
-	for(var i=0; i<ifs.length;i++){
-		if(ifs[i].title.indexOf(editor.name)>-1){
-			return ifs[i];
-		}
-	}
-	return null;
-}
-function Navigate(seditor,tag){
-	var editor = CKEDITOR.instances[seditor];
-	var f = getEditorFrame(editor);
-	f.contentWindow.scrollTo(0,f.contentDocument.getElementById(tag).offsetTop);
-}
-

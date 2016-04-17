@@ -7,6 +7,7 @@
 * @license http://www.gnu.org/licenses/gpl-2.0.html GNU General Public License, version 2 (one or other)
 * @version 4.2.4
 */
+
 session_start();
 require('security.php');
 if(!isset($_SESSION['user'])){
