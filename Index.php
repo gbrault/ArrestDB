@@ -14,7 +14,7 @@ require('security.php')
 		<link rel="icon" href="favicon.ico" type="image/x-icon">
 	</head>
 	<body id="top">
-	<div id="content">
+	<div id="rlite">
 	<!--  Where content will be added -->	
 	</div>
 	<!-- Hiden Editor hosting the Dialog API -->			

@@ -77,8 +77,8 @@ if (strcmp(PHP_SAPI, 'cli') === 0)
 
 function call_ArrestDB(){
 	
-// $dsn = 'mysql://root@localhost/Northwind/';
-$dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sqlite';
+$dsn = 'mysql://root@localhost/Northwind/';
+// $dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sqlite';
 $clients = [];
 
 

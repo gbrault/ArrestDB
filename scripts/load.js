@@ -34,7 +34,7 @@ function loadDocument(docname){
 	window.rlite.docname = docname;
 	window.rlite.document="";
 	// empty content div
-	var content = document.getElementById("content");
+	var content = document.getElementById("rlite");
 	content.innerHTML="";
 	PubSub.clearAllSubscriptions();
 	PubSub.subscribe('loaded',function(msg,data){
@@ -93,7 +93,7 @@ function loadDocument(docname){
 			 }
 		  }		
 		  // render the document
-		  var content = document.getElementById("content");
+		  var content = document.getElementById("rlite");
 		  content.innerHTML="";
 		  content.insertAdjacentHTML('beforeend',window.rlite.document);
 		  // now load scripts, styles and editors
