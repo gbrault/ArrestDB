@@ -24,9 +24,15 @@ document.onreadystatechange = function () {
 }
 
 function loadDocument(docname){
+	var i;
 	if((window.rlite.loading!=undefined)&&(window.rlite.loading)){
 			return; // loading is not recursive but only iterative...
 	}
+	if(window.rlite.fragments==undefined){
+		window.rlite.fragments=[];
+	}
+	window.rlite.docname = docname;
+	window.rlite.document="";
 	// empty content div
 	var content = document.getElementById("content");
 	content.innerHTML="";
@@ -38,87 +44,111 @@ function loadDocument(docname){
 	var uri= window.root.uri+window.root.adb+'Documents/name/'+docname;
     var doclist = CKEDITOR.restajax.getjson(uri);
     if(!doclist.hasOwnProperty("error")){
-      var doc = doclist[0];
-      var fragments=eval(doc.definition);
-      window.rlite.fragments={};
-      for(var i=0; i<fragments.length; i++){
-	  	// load each of the fragments according to the fragments array order
-	  	window.rlite.fragments[i]=function(fragment,i,length){
-			if((i==0)||(window.rlite.fragments[i-1]==undefined)){
-				loadFragment(fragment);
-				delete window.rlite.fragments[i];
-				if(i==(length-1)){
-					PubSub.publish('loaded',null);
+	      var doc = doclist[0];
+	      var fragments=eval(doc.definition);
+	      // load fragments if needed and create document
+	      // create the fragment list
+	      var ids=[]; 
+	      for(i=0; i<fragments.length; i++){
+	      	if(window.rlite.fragments[fragments[i]]==undefined){
+	      		// items={"col":"CustomerID","ids":["ANATR","ANTON"]}
+	      		ids.push(fragments[i]);
+	      	}
+	      }
+	      if(ids.length!=0){
+		      var items = {col:"name",ids:ids };
+		      var uri = window.root.uri+window.root.adb+'Fragments/?items='+JSON.stringify(items);
+		      var fraglist = CKEDITOR.restajax.getjson(uri);
+		      if(!fraglist.hasOwnProperty("error")){
+			      for(i=0;i<fraglist.length;i++){
+				  	var frag = fraglist[i];
+			    		eval('var config='+frag.data);
+						window.rlite.fragments[frag.name] = {
+							name: frag.name,
+							config: config,
+							html: '<!-- fragment: '+frag.name+' -->'+frag.html
+						}			  	
+				  }
+			  }
+		  }
+		  // build the document according to fragment list and user role
+	      for(i=0; i<fragments.length; i++){
+	      	// fragments are cached in the window.rlite.fragments array
+	      	if(window.rlite.fragments[fragments[i]]!=undefined){
+				if((window.rlite.fragments[fragments[i]].config.type=='html')
+				   ||((window.user==undefined)&&
+				      ( window.rlite.fragments[fragments[i]].config.type=='editor'))){
+					window.rlite.document = window.rlite.document.concat(
+				                             window.rlite.fragments[fragments[i]].html);
+					
+				} else if((window.user!=undefined)&&
+				          ( window.rlite.fragments[fragments[i]].config.type=='editor')){
+					window.rlite.document = window.rlite.document.concat(
+					                         '<!-- fragment textarea: '+
+					                         window.rlite.fragments[fragments[i]].name+' -->'+
+				                             '<textarea id="'+
+				                             window.rlite.fragments[fragments[i]].config.name
+				                             +'"></textarea>');
 				}
-			} else {
-				setTimeout(window.rlite.fragments[i],0,fragment,i,length);
+			 }
+		  }		
+		  // render the document
+		  var content = document.getElementById("content");
+		  content.innerHTML="";
+		  content.insertAdjacentHTML('beforeend',window.rlite.document);
+		  // now load scripts, styles and editors
+		  for(i=0; i<fragments.length; i++){
+		    if(window.rlite.fragments[fragments[i]]!=undefined){
+				loadFragment(window.rlite.fragments[fragments[i]]);
 			}
-		};
-		window.rlite.fragments[i](fragments[i],i,fragments.length);
-	  }
-    }
-    window.rlite.loading=false; 
-    window.rlite.userSubscribe = PubSub.subscribe('user', function(msg,data){
-	   PubSub.unsubscribe(window.rlite.userSubscribe);
-	   loadDocument(docname);
-	}.bind(this,docname));		
+		  }		
+	}
+    window.rlite.loading=false;
+    PubSub.subscribe('user',function(msg,data){
+    		loadDocument(window.rlite.docname);
+	});
 }
 
-function loadFragment(fragname){	
-	var uri = window.root.uri+window.root.adb+'Fragments/name/'+fragname;
-	var fraglist = CKEDITOR.restajax.getjson(uri);
-	if(!fraglist.hasOwnProperty("error")){
-		var frag = fraglist[0];
-		// inject into the content division
-		var content = document.getElementById("content");
-		content.insertAdjacentHTML('beforeend','<!-- fragment: '+frag.name+' -->');
-		eval('var config='+frag.data);
-		if(config.type=='script'){
-			for(var i=0;i<config.list.length;i++){
-				if(config.list[i].ext=='js'){
-					// clean the dom if script was already loaded (to make dom readeable)
-					var scripts = document.querySelectorAll('script[src='
-					                            +"'"+config.list[i].file+"'"+']');
-					if((scripts!=null)&& (scripts.length==1)){
-						scripts[0].remove();
-					}
-					var scriptElement = document.createElement('script');
-	    			scriptElement.src = config.list[i].file;
-	    			document.body.appendChild(scriptElement);					
-				} else if (config.list[i].ext=='css'){
-					// clean the dom if css was already loaded (to make dom readeable)
-					var stylesheets = document.querySelectorAll('link[href='
-					                            +"'"+config.list[i].file+"'"+']');
-					if((stylesheets!=null)&& (stylesheets.length==1)){
-						stylesheets[0].remove();
-					}					                        
-					var ls = document.createElement('link');
-  					ls.rel="stylesheet";
-  					ls.type="text/css";
-  					ls.href=config.list[i].file;
-  					ls.media = 'all';
-  					document.getElementsByTagName('head')[0].appendChild(ls);
+function loadFragment(frag){	
+	if(frag.config.type=='script'){
+		for(var i=0;i<frag.config.list.length;i++){
+			if(frag.config.list[i].ext=='js'){
+				// clean the dom if script was already loaded (to make dom readeable)
+				var scripts = document.querySelectorAll('script[src='
+				                            +"'"+frag.config.list[i].file+"'"+']');
+				if((scripts!=null)&& (scripts.length==1)){
+					scripts[0].remove();
 				}
+				var scriptElement = document.createElement('script');
+    			scriptElement.src = frag.config.list[i].file;
+    			document.body.appendChild(scriptElement);					
+			} else if (frag.config.list[i].ext=='css'){
+				// clean the dom if css was already loaded (to make dom readeable)
+				var stylesheets = document.querySelectorAll('link[href='
+				                            +"'"+frag.config.list[i].file+"'"+']');
+				if((stylesheets!=null)&& (stylesheets.length==1)){
+					stylesheets[0].remove();
+				}					                        
+				var ls = document.createElement('link');
+				ls.rel="stylesheet";
+				ls.type="text/css";
+				ls.href=frag.config.list[i].file;
+				ls.media = 'all';
+				document.getElementsByTagName('head')[0].appendChild(ls);
 			}
-		} else if((config.type=='html')||((window.user==undefined)&&(config.type=='editor'))){
-			content.insertAdjacentHTML('beforeend',frag.html);
-		} else if((window.user!=undefined)&&(config.type=='editor')){
-			// load a CKEDITOR section...
-			// inject a textarea
-			var html = '<textarea id="'+config.name+'"></textarea>'
-			content.insertAdjacentHTML('beforeend',html);
-			CKEDITOR.replace( config.name, config.editor );
-			CKEDITOR.instances[config.name].on("instanceReady", function(event)
-		    {
-	     		//triggered after the editor is setup  			
-	     		event.editor.setData(frag.html,{noSnapshot:true});
-	     		setTimeout(function(){PubSub.publish('loaded',null);},0);	
-		    });
-		    CKEDITOR.instances[config.name].on("dataReady", function(event){
-		    	// install the PubSub API
-       			CKEDITOR.instances[config.name].window.PubSub=PubSub;
-            });
 		}
+	} else if((window.user!=undefined)&&(frag.config.type=='editor')){
+		// load a CKEDITOR section...
+		CKEDITOR.replace( frag.config.name, frag.config.editor );
+		CKEDITOR.instances[frag.config.name].on("instanceReady", function(event)
+	    {
+     		//triggered after the editor is setup  			
+     		event.editor.setData(frag.html,{noSnapshot:true});
+	    });
+	    CKEDITOR.instances[frag.config.name].on("dataReady", function(event){
+	    	// install the PubSub API
+   			CKEDITOR.instances[frag.config.name].window.PubSub=PubSub;
+        });
 	}
 }
 

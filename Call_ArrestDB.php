@@ -24,6 +24,7 @@
 *                                       ?by=<column>[order=ASC|DESC]
 *                                       ?columns="<col1>,<col2>,<col3>" (returns only those columns)
 * 										?count (superseed all other modifiers)
+* 										?items={"col":"CustomerID","ids":["ANATR","ANTON"]}
 * DELETE .../<table>/<num>   			delete record which id=<num>
 * DELETE .../<table>/<column>/<value>   delete record which column=<value> (todo)
 * 
@@ -40,6 +41,7 @@
 * 11-04-2016  Added count GET modifier
 * 17-04-2016  transformed ArrestDB script into a function call to share the code between scripts 
 *             on the same server
+* 18-04-2016  added option items
 * 
 **/
 if (!function_exists('json_last_error_msg')){
@@ -75,7 +77,8 @@ if (strcmp(PHP_SAPI, 'cli') === 0)
 
 function call_ArrestDB(){
 	
-$dsn = 'mysql://root@localhost/Northwind/';
+// $dsn = 'mysql://root@localhost/Northwind/';
+$dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sqlite';
 $clients = [];
 
 
@@ -157,6 +160,8 @@ if(is_string($result)) return $result;
 
 $result = ArrestDB::Serve('GET', '/(#any)/(#num)?', function ($table, $id = null)
 {
+	// let the last GET function take care of this case
+	if($id==null) return false;
 	// use ` to quote a column name with blanks for example
     $select = sprintf('SELECT * FROM "%s"', $table);
     if (isset($_GET['columns']) === true){
@@ -219,6 +224,93 @@ $result = ArrestDB::Serve('GET', '/(#any)/(#num)?', function ($table, $id = null
 	else if (isset($id) === true)
 	{
 		$result = array_shift($result);
+	}
+
+	return ArrestDB::Reply($result);
+});
+
+if(is_string($result)) return $result;
+
+$result = ArrestDB::Serve('GET', '/(#any)/', function ($table)
+{
+	// two cases
+	// no 'items' option => return all the elements from Table
+	// (items) option => return an array of elements indexed with items
+	// items={"col":"CustomerID","ids":["ANATR","ANTON"]}
+	// use ` to quote a column name with blanks for example
+    $select = sprintf('SELECT * FROM `%s`', $table);
+    if (isset($_GET['columns']) === true){
+    	$columns = trim($_GET['columns'],'"');
+		$select = sprintf('SELECT %s FROM "%s"', $columns, $table);	
+    }
+    
+    if(isset($_GET['items'])=== true){
+    	$items=json_decode($_GET['items']);
+    }
+        
+    if(isset($_GET['count'])=== true){
+    	$select = sprintf('SELECT count(*) as count FROM "%s"', $table);
+    }
+    
+	
+	$query = array
+	(
+		$select
+	);
+	
+	if (isset($items) === true)
+	{
+		$list = "";
+		$col = $items->col;
+		// build the OR Where
+		$count = count($items->ids);
+		for($i=0;$i<$count;$i++){
+			$id = $items->ids[$i];
+			if(!is_numeric($id)){
+				$id = "'$id'";
+			}
+			$list .= "`$col`=".$id;
+			if($i < (count($items->ids)-1)){
+				$list .= " OR ";
+			}
+		}
+		$query[] = "WHERE $list";
+	}
+
+	else
+	{
+		if (isset($_GET['by']) === true)
+		{
+			if (isset($_GET['order']) !== true)
+			{
+				$_GET['order'] = 'ASC';
+			}
+
+			$query[] = sprintf('ORDER BY "%s" %s', $_GET['by'], $_GET['order']);
+		}
+
+		if (isset($_GET['limit']) === true)
+		{
+			$query[] = sprintf('LIMIT %u', $_GET['limit']);
+
+			if (isset($_GET['offset']) === true)
+			{
+				$query[] = sprintf('OFFSET %u', $_GET['offset']);
+			}
+		}
+	}
+
+	$query = sprintf('%s;', implode(' ', $query));
+	$result = ArrestDB::Query($query);
+
+	if ($result === false)
+	{
+		$result = ArrestDB::$HTTP[404];
+	}
+
+	else if (empty($result) === true)
+	{
+		$result = ArrestDB::$HTTP[204];
 	}
 
 	return ArrestDB::Reply($result);

@@ -102,21 +102,15 @@ if(window.skel==undefined){
 		  	$login.innerText="Login";
 		  	if (window.user) {
 		  		delete window.user;
-		  	    PubSub.publish('user',null);
+		  		PubSub.publish("user",null);
 		  	}
 		  }
 		  if(!logout){
-		    var editor = CKEDITOR.instances.hideneditor;
-	  	  	// editor.ui.get('loginButton').click(editor);
+		    var editor = CKEDITOR.instances.hideneditor;	  	  	
 	  	  	if((editor.DialogPending==undefined)||(editor.DialogPending==false)){
           		editor.DialogPending = true;
 	  	  		editor.openDialog('login', editor.waitDialog);		  	
-		  	}
-		  	PubSub.subscribe('user', function(msg,data){ 
-		  		if((data!=undefined)&&(data!=null)){
-					this.innerText="Logout";
-				}                   		  					
-			}.bind(login));		  	
+		  	}	  	
 		  }
 	  });
 	  
