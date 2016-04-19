@@ -156,7 +156,9 @@ function loadFragment(frag){
 	    });
 	    CKEDITOR.instances[frag.config.name].on("dataReady", function(event){
 	    	// install the PubSub API
-   			CKEDITOR.instances[frag.config.name].window.PubSub=PubSub;
+	    	if(CKEDITOR.instances[frag.config.name].window){
+				CKEDITOR.instances[frag.config.name].window.PubSub=PubSub;
+			}   			
         });
 	}
 }

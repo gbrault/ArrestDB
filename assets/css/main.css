@@ -2687,6 +2687,10 @@
 					#nav > ul.links > li:first-child > a:not(.button) {
 						border-top: 0 !important;
 					}
+					
+					#nav option {
+						background-color: rgb(59,59,59);
+					}
 
 		#nav .close {
 			text-decoration: none;

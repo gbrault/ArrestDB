@@ -96,7 +96,7 @@ if(window.skel==undefined){
 	      console.log('login');
 	  	  var logout = ($login.innerText=="Logout");
 	  	  if(($login.innerText=="Logout")||(window.key==undefined)||(window.key==null)){
-		  	var jkey = CKEDITOR.restajax.load("/ArrestDB/logout.php");
+		  	var jkey = CKEDITOR.restajax.load(window.root.uri+'logout.php');
 		  	var res = JSON.parse(jkey);
 		  	window.key = res.key;
 		  	$login.innerText="Login";
@@ -119,11 +119,11 @@ if(window.skel==undefined){
 	       if(CKEDITOR){
 		   	  if(CKEDITOR.restajax==undefined){
 			  	CKEDITOR.plugins.load('restajax', function(){
-			  		var $value = CKEDITOR.restajax.getjson('/ArrestDB/test.php');
+			  		var $value = CKEDITOR.restajax.getjson(window.root.uri+'test.php');
 			  		console.log($value);
 			  	});
 			  } else {
-			  	var $value = CKEDITOR.restajax.getjson('/ArrestDB/test.php');
+			  	var $value = CKEDITOR.restajax.getjson(window.root.uri+'test.php');
 			  	console.log($value);
 			  }
 		   }		   
