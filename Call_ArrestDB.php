@@ -29,7 +29,7 @@
 * DELETE .../<table>/<column>/<value>   delete record which column=<value> (todo)
 * 
 * with data packet
-* PUT    .../<table>/<um>               Update database item where id=<num> with PUT data 
+* PUT    .../<table>/<um>               Update database item where id=<num> with PUT data id = "Id".ucfirst(<table sigulared>)
 * PUT    .../<table>/<column>/<value>   Update database item where column=<value> with PUT data (todo)
 *                                       (all writable data needed)
 * POST   .../<table>   					Create record in database with POST data 
@@ -42,6 +42,7 @@
 * 17-04-2016  transformed ArrestDB script into a function call to share the code between scripts 
 *             on the same server
 * 18-04-2016  added option items
+* 19-04-2016  changed naming convention of index from id to Id<table name singular if plural else table name>
 * 
 **/
 if (!function_exists('json_last_error_msg')){
@@ -75,12 +76,22 @@ if (strcmp(PHP_SAPI, 'cli') === 0)
 	exit('ArrestDB should not be run from CLI.' . PHP_EOL);
 }
 
+function IdColName($table){
+	$tb = ucfirst(strtolower($table));
+	$IdColName = "Id".$tb;
+	$i = strlen($tb);
+	if($tb[$i-1]=='s'){
+		$i=strlen($IdColName);
+		$IdColName=substr($IdColName,0,$i-1);
+	}
+	return $IdColName;
+}
+
 function call_ArrestDB(){
 	
-$dsn = 'mysql://root@localhost/Northwind/';
-// $dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sqlite';
+// $dsn = 'mysql://root@localhost/Northwind/';
+$dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sqlite';
 $clients = [];
-
 
 if ((empty($clients) !== true) && (in_array($_SERVER['REMOTE_ADDR'], (array) $clients) !== true))
 {
@@ -104,6 +115,7 @@ else if (array_key_exists('HTTP_X_HTTP_METHOD_OVERRIDE', $_SERVER) === true)
 
 $result = ArrestDB::Serve('GET', '/(#any)/(#any)/(#any)', function ($table, $id, $data)
 {
+	$IdColName=IdColName($table);
     $select = sprintf('SELECT * FROM "%s"', $table);
     if (isset($_GET['columns']) === true){
     	$columns = trim($_GET['columns'],'"');
@@ -160,6 +172,7 @@ if(is_string($result)) return $result;
 
 $result = ArrestDB::Serve('GET', '/(#any)/(#num)?', function ($table, $id = null)
 {
+	$IdColName=IdColName($table);
 	// let the last GET function take care of this case
 	if($id==null) return false;
 	// use ` to quote a column name with blanks for example
@@ -182,7 +195,7 @@ $result = ArrestDB::Serve('GET', '/(#any)/(#num)?', function ($table, $id = null
 
 	if (isset($id) === true)
 	{
-		$query[] = sprintf('WHERE "%s" = ? LIMIT 1', 'id');
+		$query[] = sprintf('WHERE "%s" = ? LIMIT 1', $IdColName);
 	}
 
 	else
@@ -233,6 +246,7 @@ if(is_string($result)) return $result;
 
 $result = ArrestDB::Serve('GET', '/(#any)/', function ($table)
 {
+	$IdColName=IdColName($table);
 	// two cases
 	// no 'items' option => return all the elements from Table
 	// (items) option => return an array of elements indexed with items
@@ -320,9 +334,10 @@ if(is_string($result)) return $result;
 
 $result = ArrestDB::Serve('DELETE', '/(#any)/(#num)', function ($table, $id)
 {
+	$IdColName=IdColName($table);
 	$query = array
 	(
-		sprintf('DELETE FROM "%s" WHERE "%s" = ?', $table, 'id'),
+		sprintf('DELETE FROM "%s" WHERE "%s" = ?', $table, $IdColName),
 	);
 
 	$query = sprintf('%s;', implode(' ', $query));
@@ -378,6 +393,7 @@ if (in_array($http = strtoupper($_SERVER['REQUEST_METHOD']), ['POST', 'PUT']) ==
 
 $result = ArrestDB::Serve('POST', '/(#any)', function ($table)
 {
+	$IdColName=IdColName($table);
 	if (empty($_POST) === true)
 	{
 		$result = ArrestDB::$HTTP[204];
@@ -454,6 +470,7 @@ if(is_string($result)) return $result;
 
 $result = ArrestDB::Serve('PUT', '/(#any)/(#num)', function ($table, $id)
 {
+	$IdColName=IdColName($table);
 	if (empty($GLOBALS['_PUT']) === true)
 	{
 		$result = ArrestDB::$HTTP[204];
@@ -470,7 +487,7 @@ $result = ArrestDB::Serve('PUT', '/(#any)/(#num)', function ($table, $id)
 
 		$query = array
 		(
-			sprintf('UPDATE "%s" SET %s WHERE "%s" = ?', $table, implode(', ', $data), 'id'),
+			sprintf('UPDATE "%s" SET %s WHERE "%s" = ?', $table, implode(', ', $data), $IdColName),
 		);
 
 		$query = sprintf('%s;', implode(' ', $query));

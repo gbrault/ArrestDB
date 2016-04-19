@@ -139,11 +139,20 @@ function loadFragment(frag){
 		}
 	} else if((window.user!=undefined)&&(frag.config.type=='editor')){
 		// load a CKEDITOR section...
+		// update the repository information
+		frag.config.editor.repository.script = window.root.uri+window.root.adb;
+		frag.config.editor.repository.table = 'fragments';
+		frag.config.editor.repository.column = 'name';
+		frag.config.editor.repository.id = frag.name;
+		frag.config.editor.repository.contentcol = 'html';  // list the columns to save
 		CKEDITOR.replace( frag.config.name, frag.config.editor );
 		CKEDITOR.instances[frag.config.name].on("instanceReady", function(event)
 	    {
      		//triggered after the editor is setup  			
      		event.editor.setData(frag.html,{noSnapshot:true});
+     		if(window.user.role=='admin'){
+				event.editor.setReadOnly(false);
+			}
 	    });
 	    CKEDITOR.instances[frag.config.name].on("dataReady", function(event){
 	    	// install the PubSub API
@@ -243,4 +252,16 @@ function Navigate(seditor,tag){
 			f.contentWindow.scrollTo(0,f.contentDocument.getElementById(tag).offsetTop);
 		}
 	},0,seditor,tag);
+}
+
+function IdColName(table){
+	var tb = table.charAt(0).toUpperCase() + table.toLowerCase().slice(1);
+	var idColName = "Id"+tb;
+	var i = table.length;
+	if(table[i-1]=='s'){
+		i = idColName.length;
+		idColName=idColName.substr(0,i-1);
+		// suppress the s
+	}
+	return idColName;
 }

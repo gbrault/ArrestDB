@@ -13,9 +13,16 @@
 
 		exec: function( editor ) {
 			if ( editor.fire( 'save' ) ) {
-				var docref = window.location.search.substring(1);
+				var docref = editor.config.repository.id;
+				var idColName = IdColName(editor.config.repository.table);
 				if(!!docref){
+					// suppress the fragment comment if it exists
+					// <!-- fragment: rlitedocument -->
+					var start = '<!-- fragment: '+docref+' -->';					
 					var doccontent = editor.getData();
+					if(doccontent.indexOf(start)==0){
+						doccontent=doccontent.substr(start.length);
+					}
 					var uritable=editor.config.repository.script+
      					editor.config.repository.table+"/";
      				var uridoc= uritable+
@@ -24,10 +31,14 @@
 					// get the id of the current document
 					var doc=CKEDITOR.restajax.getjson(uridoc);
 					if(!doc.hasOwnProperty("error")){
-						var uriid=uritable+"/"+doc[0].id;
-						var blob = JSON.stringify(editor.cksqlite);
+						var uriid=uritable+doc[0][idColName];
+						// what do we need to save?						
+						var content={};
+						content[editor.config.repository.contentcol]=doccontent;
+						// var blob = JSON.stringify(editor.cksqlite);
+						// will need to tell which are the other variable to process...
 						CKEDITOR.restajax.putjson(uriid,
-											{content:doccontent,blob:blob}
+											content
 											);
 					} else {
 						 if (window.confirm(docref+" Does not exist; Do you want to create it?")){
