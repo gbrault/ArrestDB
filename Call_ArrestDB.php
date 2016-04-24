@@ -24,7 +24,12 @@
 *                                       ?by=<column>[order=ASC|DESC]
 *                                       ?columns="<col1>,<col2>,<col3>" (returns only those columns)
 * 										?count (superseed all other modifiers)
-* 										?items={"col":"CustomerID","ids":["ANATR","ANTON"]}
+* 										?items={"col":"CustomerID","ids":["ANATR","ANTON"]}  works for GET .../<table> 
+* 										?records=[{"table":"Customer","id":"VINET"}
+* 												  ,{"table":"Order","id":10248}
+* 												  ,{"table":"OrderDetail","col":"IdOrder","id":10248}] 
+* 										works for GET /: empty path
+* 										id column follow the rule "Id".ucfl($table) singulared
 * DELETE .../<table>/<num>   			delete record which id=<num>
 * DELETE .../<table>/<column>/<value>   delete record which column=<value> (todo)
 * 
@@ -43,6 +48,7 @@
 *             on the same server
 * 18-04-2016  added option items
 * 19-04-2016  changed naming convention of index from id to Id<table name singular if plural else table name>
+* 22-04-2016  added records modifier
 * 
 **/
 if (!function_exists('json_last_error_msg')){
@@ -328,6 +334,85 @@ $result = ArrestDB::Serve('GET', '/(#any)/', function ($table)
 	}
 
 	return ArrestDB::Reply($result);
+});
+
+if(is_string($result)) return $result;
+
+$result = ArrestDB::Serve('DELETE', '/(#any)/(#num)', function ($table, $id)
+{
+	$IdColName=IdColName($table);
+	$query = array
+	(
+		sprintf('DELETE FROM "%s" WHERE "%s" = ?', $table, $IdColName),
+	);
+
+	$query = sprintf('%s;', implode(' ', $query));
+	$result = ArrestDB::Query($query, $id);
+
+	if ($result === false)
+	{
+		$result = ArrestDB::$HTTP[404];
+	}
+
+	else if (empty($result) === true)
+	{
+		$result = ArrestDB::$HTTP[204];
+	}
+
+	else
+	{
+		$result = ArrestDB::$HTTP[200];
+	}
+
+	return ArrestDB::Reply($result);
+});
+
+if(is_string($result)) return $result;
+
+$result = ArrestDB::Serve('GET', '/', function ()
+{
+	// works only associated with the ?records modifier and no other modifiers
+	if (!isset($_GET['records']) === true){
+		$result = ArrestDB::$HTTP[204];
+		return;
+	}
+	
+	$records=json_decode($_GET['records']);
+	$response = [];
+	for($i=0; $i<count($records); $i++){
+		$table = $records[$i]->table;
+		$IdColName=IdColName($table);
+		if(isset( $records[$i]->col)){
+			$col = $records[$i]->col;
+		} else{
+			$col = $IdColName;
+		}
+		$id = $records[$i]->id;
+	    
+	    if(!is_numeric($id)){
+			$id = "'".$id."'";
+		}
+	    $select = sprintf("SELECT * FROM `%s` WHERE `%s`=%s", $table, $col, $id );	    
+		
+		$result = ArrestDB::Query($select);
+
+		if ($result === false)
+		{
+			$result = ArrestDB::$HTTP[404];
+		}
+
+		else if (empty($result) === true)
+		{
+			$result = ArrestDB::$HTTP[204];
+		}
+	    if(count($result)==1){
+			$response[] = ["$table" => $result[0]];	
+		} else {
+			$response[] = ["$table" => $result];	
+		}
+					
+	}
+	return ArrestDB::Reply($response);
 });
 
 if(is_string($result)) return $result;

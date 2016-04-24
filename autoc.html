@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="autoComplete/auto-complete.css">
+<script type="text/javascript" src="autoComplete/auto-complete.js"></script>
+<script>
+/*
+function updateList(that) {
+    var lastValue = that.lastValue,
+        value = that.value,
+        array = [],
+        pos = value.indexOf('|'),
+        start = that.selectionStart,
+        end = that.selectionEnd,
+        options;
+
+    if (that.options) {
+        options = that.options;
+    } else {
+        options = Object.keys(that.list.options).map(function (option) {
+            return that.list.options[option].value;
+        });
+        that.options = options;
+    }
+
+    if (lastValue !== value) {
+        that.list.innerHTML = options.filter(function (a) {
+            return ~a.toLowerCase().indexOf(value.toLowerCase());
+        }).map(function (a) {
+            return '<option value="' + value + '|' + a + '">' + a + '</option>';
+        }).join();
+        updateInput(that);
+        that.lastValue = value;
+    }
+}
+
+function updateInput(that) {
+    var value = that.value,
+        pos = value.indexOf('|'),
+        start = that.selectionStart,
+        end = that.selectionEnd;
+
+    if (~pos) {
+        value = value.slice(pos + 1);
+    }
+    that.value = value;
+    that.setSelectionRange(start, end);
+}
+(function(funcName, baseObj) {
+    // The public function name defaults to window.docReady
+    // but you can pass in your own object and own function name and those will be used
+    // if you want to put them in a different namespace
+    funcName = funcName || "docReady";
+    baseObj = baseObj || window;
+    var readyList = [];
+    var readyFired = false;
+    var readyEventHandlersInstalled = false;
+
+    // call this when the document is ready
+    // this function protects itself against being called more than once
+    function ready() {
+        if (!readyFired) {
+            // this must be set to true before we start calling callbacks
+            readyFired = true;
+            for (var i = 0; i < readyList.length; i++) {
+                // if a callback here happens to add new ready handlers,
+                // the docReady() function will see that it already fired
+                // and will schedule the callback to run right after
+                // this event loop finishes so all handlers will still execute
+                // in order and no new ones will be added to the readyList
+                // while we are processing the list
+                readyList[i].fn.call(window, readyList[i].ctx);
+            }
+            // allow any closures held by these functions to free
+            readyList = [];
+        }
+    }
+
+    function readyStateChange() {
+        if ( document.readyState === "complete" ) {
+            ready();
+        }
+    }
+
+    // This is the one public interface
+    // docReady(fn, context);
+    // the context argument is optional - if present, it will be passed
+    // as an argument to the callback
+    baseObj[funcName] = function(callback, context) {
+        // if ready has already fired, then just schedule the callback
+        // to fire asynchronously, but right away
+        if (readyFired) {
+            setTimeout(function() {callback(context);}, 1);
+            return;
+        } else {
+            // add the function and context to the list
+            readyList.push({fn: callback, ctx: context});
+        }
+        // if document already ready to go, schedule the ready function to run
+        if (document.readyState === "complete") {
+            setTimeout(ready, 1);
+        } else if (!readyEventHandlersInstalled) {
+            // otherwise if we don't have event handlers installed, install them
+            if (document.addEventListener) {
+                // first choice is DOMContentLoaded event
+                document.addEventListener("DOMContentLoaded", ready, false);
+                // backup is window load event
+                window.addEventListener("load", ready, false);
+            } else {
+                // must be IE
+                document.attachEvent("onreadystatechange", readyStateChange);
+                window.attachEvent("onload", ready);
+            }
+            readyEventHandlersInstalled = true;
+        }
+    }
+})("docReady", window);
+*/
+/*
+docReady(function(){
+  document.getElementsByTagName('input').browser.addEventListener('keyup', 
+      function (e) {
+              updateList(this);
+      });
+  document.getElementsByTagName('input').browser.addEventListener('input', 
+      function (e) {
+        updateInput(this);
+      });
+});
+*/
+/*
+var xhttp;
+if (window.XMLHttpRequest) {
+    xhttp = new XMLHttpRequest();
+    } else {
+    // code for IE6, IE5
+    xhttp = new ActiveXObject("Microsoft.XMLHTTP");
+}
+xhttp.onreadystatechange = function() {
+  if (xhttp.readyState == 4 && xhttp.status == 200) {
+    var content = JSON.parse(xhttp.responseText);
+    var list = document.getElementById("datalist1");
+    var input = document.getElementById("srch");
+    list.innerHTML="";
+    for(var i=0; i< content.length; i++){
+      var item = content[i];
+      var option = document.createElement('option');
+      option.value = item.ContactName;
+      // option.setAttribute('data-record',item);
+      list.appendChild(option);
+    }
+    input.setAttribute("placeholder", "Contact Name List");
+  }
+};
+
+var myAwsomeplete;
+ajax.onload = function() {
+	myAwsomeplete._list = JSON.parse(ajax.responseText).map(function(i) { return i.ContactName; });	
+};
+
+(function(funcName, baseObj) {
+    // The public function name defaults to window.docReady
+    // but you can pass in your own object and own function name and those will be used
+    // if you want to put them in a different namespace
+    funcName = funcName || "docReady";
+    baseObj = baseObj || window;
+    var readyList = [];
+    var readyFired = false;
+    var readyEventHandlersInstalled = false;
+
+    // call this when the document is ready
+    // this function protects itself against being called more than once
+    function ready() {
+        if (!readyFired) {
+            // this must be set to true before we start calling callbacks
+            readyFired = true;
+            for (var i = 0; i < readyList.length; i++) {
+                // if a callback here happens to add new ready handlers,
+                // the docReady() function will see that it already fired
+                // and will schedule the callback to run right after
+                // this event loop finishes so all handlers will still execute
+                // in order and no new ones will be added to the readyList
+                // while we are processing the list
+                readyList[i].fn.call(window, readyList[i].ctx);
+            }
+            // allow any closures held by these functions to free
+            readyList = [];
+        }
+    }
+
+    function readyStateChange() {
+        if ( document.readyState === "complete" ) {
+            ready();
+        }
+    }
+
+    // This is the one public interface
+    // docReady(fn, context);
+    // the context argument is optional - if present, it will be passed
+    // as an argument to the callback
+    baseObj[funcName] = function(callback, context) {
+        // if ready has already fired, then just schedule the callback
+        // to fire asynchronously, but right away
+        if (readyFired) {
+            setTimeout(function() {callback(context);}, 1);
+            return;
+        } else {
+            // add the function and context to the list
+            readyList.push({fn: callback, ctx: context});
+        }
+        // if document already ready to go, schedule the ready function to run
+        if (document.readyState === "complete") {
+            setTimeout(ready, 1);
+        } else if (!readyEventHandlersInstalled) {
+            // otherwise if we don't have event handlers installed, install them
+            if (document.addEventListener) {
+                // first choice is DOMContentLoaded event
+                document.addEventListener("DOMContentLoaded", ready, false);
+                // backup is window load event
+                window.addEventListener("load", ready, false);
+            } else {
+                // must be IE
+                document.attachEvent("onreadystatechange", readyStateChange);
+                window.attachEvent("onload", ready);
+            }
+            readyEventHandlersInstalled = true;
+        }
+    }
+})("docReady", window);
+
+
+docReady(function(){
+  myAwsomeplete = new Awesomplete(document.querySelector("#srch"),{ list: [{ContactName:"tbd"}] });
+});
+
+var ajax;
+if (window.XMLHttpRequest) {
+    ajax = new XMLHttpRequest();
+    } else {
+    // code for IE6, IE5
+    ajax = new ActiveXObject("Microsoft.XMLHTTP");
+}
+function myFunction(event){
+  var input = event.currentTarget;
+  input.setAttribute("placeholder","Loading options..."); 
+  var value =  input.value + String.fromCharCode(event.keyCode);
+  var uri = "/arrestDB/ArrestDB.php/Customer/ContactName/"+"%25"+value+"%25?limit=20";
+  ajax.open("GET", uri, true);
+  ajax.send();
+}
+ajax.onreadystatechange = function() {
+  if (ajax.readyState == 4 && ajax.status == 200) {
+    var content = JSON.parse(ajax.responseText);
+    var list = document.getElementById("datalist1");
+    var input = document.getElementById("srch");
+    list.innerHTML="";
+    for(var i=0; i< content.length; i++){
+      var item = content[i];
+      var option = document.createElement('option');
+      option.value = input.value+"|"+item.ContactName;
+      // option.setAttribute('data-record',item);
+      list.appendChild(option);
+    }
+    input.setAttribute("placeholder", "Contact Name List");
+  }
+};
+function updateInput(that) {
+    var value = that.value,
+        pos = value.indexOf('|'),
+        start = that.selectionStart,
+        end = that.selectionEnd;
+
+    if (~pos) {
+        value = value.slice(pos + 1);
+    }
+    that.value = value;
+    that.setSelectionRange(start, end);
+}
+*/
+</script>
+</head>
+<body>
+<input name="q">
+<!--
+<h2>Database Search Autocomplete datalist</h2>
+Customer Contact: 
+<input type="text" name="srch" id="srch" list="datalist1" placeholder="e.g. datalist" onkeypress="myFunction(event);" oninput="updateInput(this);" >
+<datalist id="datalist1">
+    <option value="Internet Explorer">
+    <option value="Firefox">
+    <option value="Chrome">
+    <option value="Opera">
+    <option value="Safari">
+</datalist>
+
+
+<input list="browsers" name="browser" id="browser" onkeyup="updateList(this);" oninput="updateInput(this);">
+<datalist id="browsers">
+    <option value="Internet Explorer">
+    <option value="Firefox">
+    <option value="Chrome">
+    <option value="Opera">
+    <option value="Safari">
+</datalist>
+-->
+<script>
+'use strict';
+var ajax;
+if (window.XMLHttpRequest) {
+    ajax = new XMLHttpRequest();
+    } else {
+    // code for IE6, IE5
+    ajax = new ActiveXObject("Microsoft.XMLHTTP");
+}
+new autoComplete({
+    selector: 'input[name="q"]',
+    source: function(term, response){
+        var uri = "/arrestDB/ArrestDB.php/Customer/ContactName/"+"%25"+term+"%25?limit=20";
+        ajax.open("GET", uri, false);
+        ajax.send(null);
+        var choices=[];
+        if(ajax.status=== 200){
+          var records = JSON.parse(ajax.responseText);
+          for(var i=0; i<records.length; i++){
+            choices.push(records[i].ContactName);
+          }
+        } 
+        response(choices);          
+    }
+});
+</script>
+</body>
+</html>

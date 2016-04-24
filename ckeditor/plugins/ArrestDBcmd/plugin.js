@@ -35,22 +35,31 @@
 						// what do we need to save?						
 						var content={};
 						content[editor.config.repository.contentcol]=doccontent;
-						// var blob = JSON.stringify(editor.cksqlite);
-						// will need to tell which are the other variable to process...
+						var plugins = {};
+						if(editor.plugins.ckrlite){
+							// check this data structure is in-line with editor widget content
+							editor.widgets.checkWidgets();
+							var widgets=editor.widgets.instances;
+							var test=[];
+							for(var i in widgets){
+								var id = widgets[i].ckrlite.id;
+								test[id]=false;
+							}
+							var struct = editor.ckrlite.format;
+							editor.rlite.prune(struct,test);
+							struct = editor.ckrlite.dataset;
+							editor.rlite.prune(struct,test);
+							struct = editor.ckrlite.template;
+							editor.rlite.prune(struct,test);
+							struct = editor.ckrlite.rendered;
+							editor.rlite.prune(struct,test);
+							
+							plugins['ckrlite']=editor.ckrlite;
+						}
+						content[editor.config.repository.pluginscol]=JSON.stringify(plugins);				
 						CKEDITOR.restajax.putjson(uriid,
-											content
+											content							
 											);
-					} else {
-						 if (window.confirm(docref+" Does not exist; Do you want to create it?")){
-     				            // create it!
-     					        doc = CKEDITOR.restajax.postjson(uritable
-     													,{name:docref,content:""});
-     							// update it
-     							var blob = JSON.stringify(editor.cksqlite);
-     							var uriid=uritable+"/"+doc[0].id;
-     						    CKEDITOR.restajax.putjson(uriid,
-											{content:doccontent,blob:blob});
-     				     }
 					}
 				}
 			}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2016, Gilbert Brault All rights reserved.
+-->
+<html>
+<head>
+	<title>Tutorial &mdash; CKEditor Rest SQL Widget for ArrestDB</title>
+	<meta charset="utf-8">
+	<script src="../../../ckeditor.js"></script>
+	<script src="../../../pubsub.js"></script>
+	<script src="../../../tokenizer-min.js"></script>
+	<link href="../../../samples/css/samples.css" rel="stylesheet">
+</head>
+<body>
+<div id='wrapper'>
+	<h1 class="samples">
+		Tutorial &mdash; CKEditor Rest SQL Widget for ArrestDB
+	</h1>
+
+	<textarea id="editor1" cols="10" rows="10">
+	</textarea>
+
+<script>
+
+document.onreadystatechange = function () {
+  if (document.readyState == "complete") {
+
+		CKEDITOR.replace( 'editor1', {
+			repository: {script: '/ArrestDB/ArrestDB.php/', table:'Reports', column:'name'},
+			// Load the cksqlite plugin.
+			extraPlugins: 'cksqlite,ArrestDBcmd,pagebreak,sourcedialog,codemirror,preview',
+
+			// Besides editor's main stylesheet load also cksqlite styles.
+			// In the usual case they can be added to the main stylesheet.
+			contentsCss: [
+				'../../../contents.css',
+				'contents.css'
+			],
+
+			// The following options are set to make the sample more clear for demonstration purposes.
+
+			// Set height to make more content visible.
+			height: 500,
+			// Rearrange toolbar groups and remove unnecessary plugins.
+			toolbarGroups: [
+				{ name: 'clipboard',   groups: [ 'clipboard', 'undo' ] },
+				{ name: 'links' },
+				{ name: 'insert' },
+				{ name: 'document',	   groups: [ 'mode' ] },
+				'/',
+				{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
+				{ name: 'paragraph',   groups: [ 'list', 'indent' ] },
+				{ name: 'styles' },
+				{ name: 'about' }
+			],
+			removePlugins: 'font,iframe,flash,stylescombo,print,smiley,pastetext,pastefromword'		
+		} );
+
+		CKEDITOR.instances.editor1.on("instanceReady", function(event)
+		{
+     		//triggered after the editor is setup
+     		var docref = window.location.search.substring(1);
+     		if(!!docref){     	
+     			// get the content
+     			var uri=event.editor.config.repository.script+
+     					event.editor.config.repository.table+"/"+
+     					event.editor.config.repository.column+"/"+
+     					docref;
+     			var doc = CKEDITOR.restajax.getjson(uri);
+     			if(!doc.hasOwnProperty("error")){
+     				CKEDITOR.instances.editor1.cksqlite = JSON.parse(doc[0].blob);  			
+     				CKEDITOR.instances.editor1.setData(doc[0].content,{noSnapshot:true});      				
+     			} else {
+     				if (window.confirm(docref+" Does not exist; Do you want to create it?")){
+     				// code 204 = no content with this name => create it!
+     					doc = CKEDITOR.restajax.postjson("/ArrestDB/ArrestDB.php/Documents/"
+     													,{name:docref,content:"",blob:"{}"});
+     				    CKEDITOR.instances.editor1.cksqlite ={};
+     				    CKEDITOR.instances.editor1.setData("",{noSnapshot:true});
+     				}
+     			}
+     		}
+		});
+
+		CKEDITOR.instances.editor1.on("focus", function(event){       
+    	});
+    	
+    	CKEDITOR.instances.editor1.on("dataReady", function(event){
+       		CKEDITOR.instances.editor1.window.PubSub=PubSub;
+    	});
+
+    	CKEDITOR.instances.editor1.on("instanceReady", function(event){
+    		
+    	});
+    	
+    	CKEDITOR.instances.editor1.on("configLoaded", function(event){
+    		
+    	});
+
+    	CKEDITOR.instances.editor1.on("loaded", function(event){
+    		
+    	});
+
+    	CKEDITOR.instances.editor1.on("contentDom", function(event){    		
+    	});
+  }
+}
+
+	</script>
+</div>
+</body>
+</html>

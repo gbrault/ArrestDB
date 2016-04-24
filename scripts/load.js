@@ -66,7 +66,8 @@ function loadDocument(docname){
 						window.rlite.fragments[frag.name] = {
 							name: frag.name,
 							config: config,
-							html: '<!-- fragment: '+frag.name+' -->'+frag.html
+							html: '<!-- fragment: '+frag.name+' -->'+frag.html,
+							plugins: frag.plugins
 						}			  	
 				  }
 			  }
@@ -144,21 +145,43 @@ function loadFragment(frag){
 		frag.config.editor.repository.table = 'fragments';
 		frag.config.editor.repository.column = 'name';
 		frag.config.editor.repository.id = frag.name;
-		frag.config.editor.repository.contentcol = 'html';  // list the columns to save
+		frag.config.editor.repository.contentcol = 'html';  // which column do I need to save?
+		frag.config.editor.repository.pluginscol='plugins'; // data for plugins
+		
 		CKEDITOR.replace( frag.config.name, frag.config.editor );
 		CKEDITOR.instances[frag.config.name].on("instanceReady", function(event)
 	    {
-     		//triggered after the editor is setup  			
+     		//triggered after the editor is setup
+     		// set editor readOnly mode 			
      		event.editor.setData(frag.html,{noSnapshot:true});
      		if(window.user.role=='admin'){
 				event.editor.setReadOnly(false);
+			}
+			var plugins=null;
+			if((frag.plugins!=undefined)&&(frag.plugins.length!=0)){
+				 plugins = JSON.parse(frag.plugins);	
+			}	
+			// check if ckrlite is enabled and init data accordingly
+			if(event.editor.plugins.ckrlite){
+				if((plugins!=null)&&(plugins['ckrlite'])){
+					event.editor.ckrlite=plugins['ckrlite'];
+				}		
+				if(event.editor.ckrlite==undefined)event.editor.ckrlite={};
+				if(event.editor.ckrlite.counter==undefined) event.editor.ckrlite.counter=0;
+				if(event.editor.ckrlite.format==undefined)event.editor.ckrlite.format={};
+				if(event.editor.ckrlite.dataset==undefined)event.editor.ckrlite.dataset={};
+				if(event.editor.ckrlite.template==undefined)event.editor.ckrlite.template={};
+				if(event.editor.ckrlite.rendered==undefined)event.editor.ckrlite.rendered={};
 			}
 	    });
 	    CKEDITOR.instances[frag.config.name].on("dataReady", function(event){
 	    	// install the PubSub API
 	    	if(CKEDITOR.instances[frag.config.name].window){
 				CKEDITOR.instances[frag.config.name].window.PubSub=PubSub;
-			}   			
+				CKEDITOR.instances[frag.config.name].window.root=root;
+			}
+			// install editor extensions
+			rliteEditorExtend(event.editor);
         });
 	}
 }
@@ -267,3 +290,222 @@ function IdColName(table){
 	}
 	return idColName;
 }
+
+function sprintf(format) {
+    // Check for format definition
+    if (typeof format != 'string') {
+        throw "sprintf: The first arguments need to be a valid format string.";
+    }
+    
+    /**
+     * Define the regex to match a formating string
+     * The regex consists of the following parts:
+     * percent sign to indicate the start
+     * (optional) sign specifier
+     * (optional) padding specifier
+     * (optional) alignment specifier
+     * (optional) width specifier
+     * (optional) precision specifier
+     * type specifier:
+     *  % - literal percent sign
+     *  b - binary number
+     *  c - ASCII character represented by the given value
+     *  d - signed decimal number
+     *  f - floating point value
+     *  o - octal number
+     *  s - string
+     *  x - hexadecimal number (lowercase characters)
+     *  X - hexadecimal number (uppercase characters)
+     */
+    var r = new RegExp(/%(\+)?([0 ]|'(.))?(-)?([0-9]+)?(\.([0-9]+))?([%bcdfosxX])/g);
+    
+    /**
+     * Each format string is splitted into the following parts:
+     * 0: Full format string
+     * 1: sign specifier (+)
+     * 2: padding specifier (0/<space>/'<any char>)
+     * 3: if the padding character starts with a ' this will be the real
+     *    padding character
+     * 4: alignment specifier
+     * 5: width specifier
+     * 6: precision specifier including the dot
+     * 7: precision specifier without the dot
+     * 8: type specifier
+     */
+    var parts = [];
+    var paramIndex = 1;
+    while (part = r.exec(format)) {
+        // Check if an input value has been provided, for the current
+        // format string (no argument needed for %%)
+        if ((paramIndex >= arguments.length) && (part[8] != '%')) {
+            throw "sprintf: At least one argument was missing.";
+        }
+        
+        parts[parts.length] = {
+            /* beginning of the part in the string */
+            begin: part.index,
+            /* end of the part in the string */
+            end: part.index + part[0].length,
+            /* force sign */
+            sign: (part[1] == '+'),
+            /* is the given data negative */
+            negative: (parseFloat(arguments[paramIndex]) < 0) ? true : false,
+            /* padding character (default: <space>) */
+            padding: (part[2] == undefined) ? (' ')/* default */ : 
+            	((part[2].substring(0, 1) == "'") ? (part[3])/* use special char */ : (part[2])/* use normal <space> or zero */),
+            /* should the output be aligned left?*/
+            alignLeft: (part[4] == '-'),
+            /* width specifier (number or false) */
+            width: (part[5] != undefined) ? part[5] : false,
+            /* precision specifier (number or false) */
+            precision: (part[7] != undefined) ? part[7] : false,
+            /* type specifier */
+            type: part[8],
+            /* the given data associated with this part converted to a string */
+            data: (part[8] != '%') ? String(arguments[paramIndex++]) : false
+        };
+    }
+    
+    var newString = "";
+    var start = 0;
+    // Generate our new formated string
+    for (var i = 0; i < parts.length; ++i) {
+                    // Add first unformated string part
+                    newString += format.substring(start, parts[i].begin);
+                    
+                    // Mark the new string start
+                    start = parts[i].end;
+                    
+                    // Create the appropriate preformat substitution
+                    // This substitution is only the correct type conversion. All the
+                    // different options and flags haven't been applied to it at this
+                    // point
+                    var preSubstitution = "";
+                    switch (parts[i].type) {
+                    case '%':
+                        preSubstitution = "%";
+                        break;
+                    case 'b':
+                        preSubstitution = Math.abs(parseInt(parts[i].data)).toString(2);
+                        break;
+                    case 'c':
+                        preSubstitution = String.fromCharCode(Math.abs(parseInt(parts[i].data)));
+                        break;
+                    case 'd':
+                        preSubstitution = String(Math.abs(parseInt(parts[i].data)));
+                        break;
+                    case 'f':
+                        preSubstitution = (parts[i].precision === false) ? (String((Math.abs(parseFloat(parts[i].data))))) : (Math.abs(parseFloat(parts[i].data)).toFixed(parts[i].precision));
+                        break;
+                    case 'o':
+                        preSubstitution = Math.abs(parseInt(parts[i].data)).toString(8);
+                        break;
+                    case 's':
+                        preSubstitution = parts[i].data.substring(0, parts[i].precision ? parts[i].precision : parts[i].data.length);
+                        /* Cut if precision is defined */
+                        break;
+                    case 'x':
+                        preSubstitution = Math.abs(parseInt(parts[i].data)).toString(16).toLowerCase();
+                        break;
+                    case 'X':
+                        preSubstitution = Math.abs(parseInt(parts[i].data)).toString(16).toUpperCase();
+                        break;
+                    default:
+                        throw 'sprintf: Unknown type "' + parts[i].type + '" detected. This should never happen. Maybe the regex is wrong.';
+                    }
+                    
+                    // The % character is a special type and does not need further processing
+                    if (parts[i].type == "%") {
+                        newString += preSubstitution;
+                        continue;
+                    }
+                    
+                    // Modify the preSubstitution by taking sign, padding and width
+                    // into account
+                    
+                    // Pad the string based on the given width
+                    if (parts[i].width != false) {
+                        // Padding needed?
+                        if (parts[i].width > preSubstitution.length) {
+                            var origLength = preSubstitution.length;
+                            for (var j = 0; j < parts[i].width - origLength; ++j) {
+                                preSubstitution = (parts[i].alignLeft == true) ? (preSubstitution + parts[i].padding) : (parts[i].padding + preSubstitution);
+                            }
+                        }
+                    }
+                    
+                    // Add a sign symbol if neccessary or enforced, but only if we are
+                    // not handling a string
+                    if (parts[i].type == 'b' || parts[i].type == 'd' || parts[i].type == 'o' || parts[i].type == 'f' || parts[i].type == 'x' || parts[i].type == 'X') {
+                        if (parts[i].negative == true) {
+                            preSubstitution = "-" + preSubstitution;
+                        } else if (parts[i].sign == true) {
+                            preSubstitution = "+" + preSubstitution;
+                        }
+                    }
+                    
+                    // Add the substitution to the new string
+                    newString += preSubstitution;
+                }
+    
+    // Add the last part of the given format string, which may still be there
+    newString += format.substring(start, format.length);
+    
+    return newString;
+}
+
+// Dataset API
+// Interface between editor ckrlite widgets and actual data to optimize server sql data access
+// <editor>.ckrlite.dataset[this.id].content select result
+// <editor>.ckrlite.dataset[this.id].select select definition
+
+function rliteEditorExtend(editor){
+	if(editor.rlite) return; // already extended...
+	// init data structures
+	editor.rlite ={};
+	editor.rlite.dataset ={};
+	// define prune function
+	editor.rlite.prune = function(struct,test){
+		for(var key in struct){
+			if((test[key]==undefined)|| test[key]){
+				delete struct[key];
+			}
+		}
+	};
+	// define dataset select function
+	editor.rlite.dataset.select = function(){
+		// update data according to definition
+		var editor=this;
+		var records=[];
+		for(var key in editor.ckrlite.dataset){			
+			records.push(editor.ckrlite.dataset[key].select); // select.table, select.col, select.id
+		}
+		var uri = window.root.uri+window.root.adb+'?records='+JSON.stringify(records);
+		var content = CKEDITOR.restajax.getjson(uri);
+		// save content
+		for(var key in editor.ckrlite.dataset){
+			for(var i=0; i<content.length; i++){
+				var table = Object.keys(content[i]);
+				if(editor.ckrlite.dataset[key].select.table==table[0]){
+					editor.ckrlite.dataset[key].content = content[i][table[0]];		
+				}
+			}			
+		}
+		// publish change
+		editor.window.PubSub.publish('datasetupdate',editor.ckrlite.dataset)
+	}.bind(editor);
+	// subscribe to fragment parameters changes
+	editor.window.PubSub.subscribe('datasetselect',function(msg,data){
+		// set parameters
+		// data definition
+		// data = [{wid:"widgetid",table:"table",col:"colname",id:"idvalue"},{...},...]
+		for(var i=0; i<data.length; i++){
+			this.ckrlite.dataset[data[i].wid].select={table:data[i].table,col:data[i].col,id:data[i].id};
+		}
+		// update data
+		this.rlite.dataset.select();
+	}.bind(editor));
+	//
+	
+}
+        
