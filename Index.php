@@ -26,7 +26,9 @@ require('security.php')
 	<script src="ckeditor/pubsub.js"></script>
 	<script src="ckeditor/ckeditor.js"></script>
 	<script src="scripts/aes/aes.js">/* AES JavaScript implementation */</script>
-	<script src="scripts/aes/aes-ctr.js">/* AES Counter Mode implementation */</script>	
+	<script src="scripts/aes/aes-ctr.js">/* AES Counter Mode implementation */</script>
+	<script src="scripts/codemirror-compressed.js"></script>
+	<link rel="stylesheet" href="scripts/codemirror.css" />
     <script src='scripts/load.js'></script>
 	</body>
 </html>
