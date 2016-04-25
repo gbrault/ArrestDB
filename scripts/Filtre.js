@@ -94,6 +94,7 @@ Filtre.prototype.publish = function(){
 Filtre.prototype.setup = function(){
     // 'class' variables: mode,def,id
     var div= document.getElementById(this.id);
+    if((div==undefined)||(div==null)) return;
     if(this.mode=='edit'){
         for(var key in this.myAutoCompletes){
             this.myAutoCompletes[key].destroy();
