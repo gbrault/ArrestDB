@@ -479,6 +479,7 @@ function rliteEditorExtend(editor){
 		var records=[];
 		for(var key in editor.ckrlite.dataset){			
 			records.push(editor.ckrlite.dataset[key].select); // select.table, select.col, select.id
+			editor.ckrlite.dataset[key].content=null;
 		}
 		var uri = window.root.uri+window.root.adb+'?records='+JSON.stringify(records);
 		var content = CKEDITOR.restajax.getjson(uri);
@@ -500,7 +501,7 @@ function rliteEditorExtend(editor){
 		// data definition
 		// data = [{wid:"widgetid",table:"table",col:"colname",id:"idvalue"},{...},...]
 		for(var i=0; i<data.length; i++){
-			this.ckrlite.dataset[data[i].wid].select={table:data[i].table,col:data[i].col,id:data[i].id};
+			this.ckrlite.dataset[data[i].wid].select={table:data[i].table,column:data[i].col,id:data[i].id};
 		}
 		// update data
 		this.rlite.dataset.select();
