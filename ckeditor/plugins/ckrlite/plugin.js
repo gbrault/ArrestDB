@@ -174,12 +174,12 @@ CKEDITOR.plugins.add('ckrlite', {
             render: function(format, content1, template){
               // with filtered data and template issue the html patch
               var i,j, content;
+              if((format==null)||(content1==null)||(template==null)) return "";
               if(!Array.isArray(content1)){
 			  	content = [content1];
 			  } else {
 			  	content = content1;
-			  }
-              if((format==null)||(content==null)||(template==null)) return "";
+			  }              
               var formatList = JSON.parse(format);                            
               var out = this.formatData(content,format);
               var output='<table class="ckrlite-render">';
