@@ -382,8 +382,8 @@ $result = ArrestDB::Serve('GET', '/', function ()
 	for($i=0; $i<count($records); $i++){
 		$table = $records[$i]->table;
 		$IdColName=IdColName($table);
-		if(isset( $records[$i]->col)){
-			$col = $records[$i]->col;
+		if(isset( $records[$i]->column)){
+			$col = $records[$i]->column;
 		} else{
 			$col = $IdColName;
 		}
