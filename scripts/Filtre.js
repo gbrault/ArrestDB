@@ -14,28 +14,38 @@ function Filtre(mode,config,id){
 
 Filtre.prototype.getRunUI = function(div){
     // return HTML string for Run Time (i.e: filter user interface)
-    var result="";
+    var ul = document.createElement("UL");
+    ul.setAttribute('class','actions small');
     for(var i=0; i<this.def.length; i++){
+      var li_input = document.createElement("LI");
+      var li_caption = document.createElement("LI");
       var defrow = this.def[i];
       if(defrow.choice!=null){
         var input = document.createElement("INPUT");
         input.setAttribute('name',"c_"+this.id+"_"+defrow.ref);
+        input.setAttribute('type','text');
+        input.setAttribute('placeholder','Input '+defrow.choice+"...");
         if(defrow.value!=undefined){
 			input.value=defrow.value;
 		}
         var caption = document.createTextNode(defrow.table+":");
-        div.appendChild(caption);
-        div.appendChild(input);
+        li_caption.appendChild(caption);
+        li_input.appendChild(input);
+        ul.appendChild(li_caption);
+        ul.appendChild(li_input);
       }       
     }
-    var edit = document.createElement("BUTTON");
+    div.appendChild(ul);
+    var edit = document.createElement("a");
     var caption = document.createTextNode("Edit");
     edit.appendChild(caption);
+    edit.setAttribute('class','button alt small');
     edit.onclick = function(){this.edit();}.bind(this);
     div.appendChild(edit);
-    var publish = document.createElement("BUTTON");
+    var publish = document.createElement("a");
     caption = document.createTextNode("Publish");
     publish.appendChild(caption);
+    publish.setAttribute('class','button alt small');
     publish.onclick = function(){this.publish();}.bind(this);
     div.appendChild(publish);
 }
