@@ -104,9 +104,11 @@ Filtre.prototype.setup = function(){
         	mode: "application/ld+json",
         	lineWrapping: true
         });
+        div.style.textAlign="left";
     } 
     else if(this.mode=='run'){
         div.innerHTML="";
+        div.style.textAlign="center";
         this.getRunUI(div);
         setTimeout(function(){
                 for(var i=0; i<this.def.length; i++){
