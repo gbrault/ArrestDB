@@ -20,6 +20,9 @@ Filtre.prototype.getRunUI = function(div){
       if(defrow.choice!=null){
         var input = document.createElement("INPUT");
         input.setAttribute('name',"c_"+this.id+"_"+defrow.ref);
+        if(defrow.value!=undefined){
+			input.value=defrow.value;
+		}
         var caption = document.createTextNode(defrow.table+":");
         div.appendChild(caption);
         div.appendChild(input);
