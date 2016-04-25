@@ -98,6 +98,12 @@ Filtre.prototype.setup = function(){
         run.appendChild(caption);
         run.onclick = function(){this.run();}.bind(this);
         div.appendChild(run);
+        var editor = CodeMirror.fromTextArea(textarea, {
+        	matchBrackets: true,
+        	autoCloseBrackets: true,
+        	mode: "application/ld+json",
+        	lineWrapping: true
+        });
     } 
     else if(this.mode=='run'){
         div.innerHTML="";
