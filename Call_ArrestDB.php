@@ -405,10 +405,14 @@ $result = ArrestDB::Serve('GET', '/', function ()
 		{
 			$result = ArrestDB::$HTTP[204];
 		}
-	    if(count($result)==1){
-			$response[] = ["$table" => $result[0]];	
+		if(!isset($result['error'])){
+	    	if(count($result)==1){
+				$response[] = ["$table" => $result[0]];	
+			} else {
+				$response[] = ["$table" => $result];	
+			}			
 		} else {
-			$response[] = ["$table" => $result];	
+			$response[] = $result;
 		}
 					
 	}
