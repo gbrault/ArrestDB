@@ -31,6 +31,8 @@
 * 										works for GET /: empty path
 * 										id column follow the rule "Id".ucfl($table) singulared
 * 										?distinct => add the DISTINCT keyword to SELECT query
+*                                       example: <script uri>/Customer?columns=%22City%22&distinct&by=City
+* 										give an ordered list of Disctinct Countries for customers
 * DELETE .../<table>/<num>   			delete record which id=<num>
 * DELETE .../<table>/<column>/<value>   delete record which column=<value> (todo)
 * 
