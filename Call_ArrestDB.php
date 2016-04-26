@@ -30,6 +30,7 @@
 * 												  ,{"table":"OrderDetail","col":"IdOrder","id":10248}] 
 * 										works for GET /: empty path
 * 										id column follow the rule "Id".ucfl($table) singulared
+* 										?distinct => add the DISTINCT keyword to SELECT query
 * DELETE .../<table>/<num>   			delete record which id=<num>
 * DELETE .../<table>/<column>/<value>   delete record which column=<value> (todo)
 * 
@@ -121,15 +122,19 @@ else if (array_key_exists('HTTP_X_HTTP_METHOD_OVERRIDE', $_SERVER) === true)
 
 $result = ArrestDB::Serve('GET', '/(#any)/(#any)/(#any)', function ($table, $id, $data)
 {
+	$pre="SELECT";
+	if(isset($_GET['distinct'])=== true){
+		$pre = "SELECT DISTINCT";
+	}
 	$IdColName=IdColName($table);
-    $select = sprintf('SELECT * FROM "%s"', $table);
+    $select = sprintf($pre.' * FROM "%s"', $table);
     if (isset($_GET['columns']) === true){
     	$columns = trim($_GET['columns'],'"');
-		$select = sprintf('SELECT %s FROM "%s"', $columns, $table);	
+		$select = sprintf($pre.' %s FROM "%s"', $columns, $table);	
     }
     
     if(isset($_GET['count'])=== true){
-    	$select = sprintf('SELECT count(*) as count FROM "%s"', $table);
+    	$select = sprintf($pre.' count(*) as count FROM "%s"', $table);
     }
 	
 	$query = array
@@ -252,16 +257,21 @@ if(is_string($result)) return $result;
 
 $result = ArrestDB::Serve('GET', '/(#any)/', function ($table)
 {
+	$pre="SELECT";
+	if(isset($_GET['distinct'])=== true){
+		$pre = "SELECT DISTINCT";
+	}
+
 	$IdColName=IdColName($table);
 	// two cases
 	// no 'items' option => return all the elements from Table
 	// (items) option => return an array of elements indexed with items
 	// items={"col":"CustomerID","ids":["ANATR","ANTON"]}
 	// use ` to quote a column name with blanks for example
-    $select = sprintf('SELECT * FROM `%s`', $table);
+    $select = sprintf($pre.' * FROM `%s`', $table);
     if (isset($_GET['columns']) === true){
     	$columns = trim($_GET['columns'],'"');
-		$select = sprintf('SELECT %s FROM "%s"', $columns, $table);	
+		$select = sprintf($pre.' %s FROM "%s"', $columns, $table);	
     }
     
     if(isset($_GET['items'])=== true){
@@ -269,7 +279,7 @@ $result = ArrestDB::Serve('GET', '/(#any)/', function ($table)
     }
         
     if(isset($_GET['count'])=== true){
-    	$select = sprintf('SELECT count(*) as count FROM "%s"', $table);
+    	$select = sprintf($pre.' count(*) as count FROM "%s"', $table);
     }
     
 	
