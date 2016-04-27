@@ -1,9 +1,27 @@
 function Filtre(mode,config,id,type){
-	this.type=type;
-    this.mode = mode;
-    this.def = config;
-    this.id = id;
-    this.ajax = null;
+	this.type=type;     // =='nc' follow naming convention
+    this.mode = mode;   // =='run' or 'edit'
+    this.def = config;  // filter configuration structure
+    /* full blown def (what is kept in memory)
+    def:[{ref:0,table:'Customer',select:'IdCustomer',choice:'ContactName',assoc:null},
+        {ref:1,table:'Order',select:'IdOrder',choice:'OrderDate',
+                    assoc:{ref:0,foreign:'IdCustomer',col:'IdCustomer'}},
+        {ref:2,table:'OrderDetail',select:'IdOrder',choice:null,assoc:{ref:1,foreign:'IdOrder',col:'IdOrder'}}]
+       if type=='nc' same edited def is
+        [{ref:0,table:'Customer',choice:'ContactName',assoc:null},
+         {ref:1,table:'Order',choice:'OrderDate',assoc:{ref:0}},
+         {ref:2,table:'OrderDetail',select:'IdOrder',choice:null,assoc:{ref:1}}]
+         ref:0 
+               - select not specificed then record id is Id<Table name> (first char upper case)
+         ref:1
+               - select not specified so is IdOrder
+               - assoc, no foreign keys nor col so they are IdCustomer (default id of ref1)
+         ref:2
+               - select is specified (IdOrder) instead of the default select (IdOrderDetail)
+               - assoc, no foreign keys not column specified so it's IdOrder (default select for Order)
+    */
+    this.id = id;       // division id where the Filtre lies
+    this.ajax = null;   // communication with the server
     this.myAutoCompletes={};
     if (window.XMLHttpRequest) {
     ajax = new XMLHttpRequest();
@@ -54,6 +72,7 @@ Filtre.prototype.getRunUI = function(div){
 Filtre.prototype.run = function(){
     this.mode='run';
     var textarea = document.getElementById("t_"+this.id);
+    // todo if nc type need to add default value if not present...
     this.def = JSON.parse(textarea.value);
     this.setup();
 }
@@ -93,7 +112,7 @@ Filtre.prototype.publish = function(){
 }
 
 Filtre.prototype.setup = function(){
-    // 'class' variables: mode,def,id
+    // 'class' variables: mode,def,id,type
     var div= document.getElementById(this.id);
     if((div==undefined)||(div==null)) return;
     if(this.mode=='edit'){
@@ -106,6 +125,7 @@ Filtre.prototype.setup = function(){
         textarea.setAttribute('rows',5);
         textarea.setAttribute('cols',100);
         textarea.setAttribute('id',"t_"+this.id);
+        // todo: simplify the def structure (to avoid complexity and verbosity) if nc type
         textarea.innerText= JSON.stringify(this.def);
         div.appendChild(textarea);
         var run = document.createElement("BUTTON");
