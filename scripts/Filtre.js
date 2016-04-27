@@ -1,4 +1,5 @@
-function Filtre(mode,config,id){
+function Filtre(mode,config,id,type){
+	this.type=type;
     this.mode = mode;
     this.def = config;
     this.id = id;
@@ -65,7 +66,7 @@ Filtre.prototype.edit= function(){
 Filtre.prototype.publish = function(){
     // data = [{wid:"widgetid",table:"table",col:"colname",id:"idvalue"},{...},...]
     var data = [];
-    for(var i=0; i<def.length; i++){
+    for(var i=0; i<this.def.length; i++){
         var defrow = this.def[i];
         var wid = defrow.ref;
         var table = defrow.table;
@@ -77,7 +78,7 @@ Filtre.prototype.publish = function(){
         if(id==null){
             // look the association
             var fref = defrow.assoc.ref
-            for(var j=0; j<def.length; j++){
+            for(var j=0; j<this.def.length; j++){
                 if(this.def[j].ref==fref){
                     id = this.def[j].key;
                 }

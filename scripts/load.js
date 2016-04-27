@@ -154,7 +154,7 @@ function loadFragment(frag){
 				document.getElementsByTagName('head')[0].appendChild(ls);
 			}
 		}
-	} else if((window.user!=undefined)&&(frag.config.type=='editor')){
+	} else if(!(window.user==undefined)&&(frag.config.type=='editor')){
 		// load a CKEDITOR section...
 		// update the repository information
 		frag.config.editor.repository.script = window.root.uri+window.root.adb;
@@ -199,6 +199,18 @@ function loadFragment(frag){
 			// install editor extensions
 			rliteEditorExtend(event.editor);
         });
+	} else if((frag.config.type=='html')&&(typeof frag.config.Filtre === 'object')){
+		// need to add a Filtre
+		var loadFiltreFunction = function(){
+			var myNav = null;
+			if(typeof window.Filtre === 'function'){
+				myFiltre = new Filtre(this.mode,this.def,this.id,this.type);
+				myFiltre.setup();
+			} else {
+				setTimeout(loadFiltreFunction,10);
+			}
+		}.bind(frag.config.Filtre)
+		loadFiltreFunction();
 	}
 }
 
