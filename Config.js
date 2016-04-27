@@ -4,7 +4,22 @@ var def = [{ref:0,table:'Customer',select:'IdCustomer',choice:'ContactName',asso
            {ref:2,table:'OrderDetail',select:'IdOrder',choice:null,assoc:{ref:1,foreign:'IdOrder',col:'IdOrder'}}];
 var id="filter1";
 var myFiltre = null;
-if(typeof Filtre === 'function'){
-	myFiltre = new Filtre(mode,def,id);
-	myFiltre.setup();
+var myFiltreFunction = function(){
+	if(typeof Filtre === 'function'){
+		myFiltre = new Filtre(mode,def,id);
+		myFiltre.setup();
+	} else {
+		setTimeout(myFiltreFunction,10);
+	}
 }
+myFiltreFunction();
+var myNav = null;
+var myNavFunction = function(){
+	if(typeof Nav === 'function'){
+		myNav = new Nav('leftmenu');
+	} else {
+		setTimeout(myNavFunction,10);
+	}
+}
+myNavFunction();
+

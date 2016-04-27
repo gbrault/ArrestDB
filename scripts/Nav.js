@@ -68,6 +68,7 @@ What to produce
     this.menuid=menuid;
     ul = document.getElementById(menuid);
     if((ul==undefined)||(ul==null)) return;
+    ul.innerHTML="";
     this.baseuri = root.uri+root.adb;
     // ajax declaration
     this.ajax = null;
@@ -84,16 +85,18 @@ What to produce
     txt = document.createTextNode('Top');
     a.appendChild(txt);
     a.setAttribute('href','#top');
+    a.setAttribute('class',"button small fit");
     li.appendChild(a);
     ul.appendChild(li);
-    if((user!=undefined)&&(user.role=='admin')){
+    if(!(window.user==undefined)&&(window.user.role=='admin')){
         // <li><a href="#" onclick='save();'>Save</a></li>
 	    li = document.createElement("LI");
 	    a = document.createElement("a");
 	    txt = document.createTextNode('Save');
 	    a.appendChild(txt);
 	    a.setAttribute('href','#');
-	    a.onclick=this.Save();    
+	    a.setAttribute('class',"button small fit");
+	    a.onclick=function(){this.Save()}.bind(this); 
 	    li.appendChild(a);
 	    ul.appendChild(li);    		
 	}    
@@ -105,7 +108,7 @@ What to produce
     if(ajax.status=== 200){
         var records = JSON.parse(ajax.responseText);
         for(i=0; i<records.length; i++){
-            categories.push([records[i].category);
+            categories.push(records[i].category);
         }
 	} else{
 		return;
@@ -124,22 +127,22 @@ What to produce
 	    sel = document.createElement("SELECT");
 	    sel.setAttribute('id',categories[i]);
 	    sel.setAttribute('name',categories[i]);
-	    sel.onclick=function(){this.Change()}.bind(sel,this);
+	    sel.onclick=function(event){this.Change(event)}.bind(this);
 	    var names=[];
 	    if(ajax.status=== 200){
 	        var records = JSON.parse(ajax.responseText);
 	        // <option value="0">- <category1> -</option>
 	        opt=document.createElement("OPTION");
 	        opt.setAttribute('value',"0");
-	        txt = document.createTextNode("- <"+categories[i]+"> -");
+	        txt = document.createTextNode("("+categories[i]+")");
 	        opt.appendChild(txt);
 	        sel.appendChild(opt);
 	        for(j=0; j<records.length; j++){
-	        	if(((user!=undefined)&&(user.role==records[j].role))||(records[j].role=="")){
-	            	names.push([records[j].name);
+	        	if((!(window.user==undefined)&&(window.user.role==records[j].role))||(records[j].role=="")){
+	            	names.push(records[j].name);
 	            	// <option value="1"><name21></option>
 	            	opt=document.createElement("OPTION");
-	            	opt.setAttribute('value',""+(j+1));
+	            	opt.setAttribute('value',records[j].name);
 	            	txt = document.createTextNode(records[j].name);
 	            	opt.appendChild(txt);
 	            	sel.appendChild(opt);
@@ -148,7 +151,7 @@ What to produce
 		} else{
 			return;
 		}
-		if(names.length!=){
+		if(names.length!=0){
 			div.appendChild(sel);
 			li.appendChild(div);
 			ul.appendChild(li);
@@ -159,5 +162,7 @@ What to produce
 Nav.prototype.Save = function(){
 }
 
-Nav.prototype.Change = function(Nav){
+Nav.prototype.Change = function(event){
+	if(event.currentTarget.value=="0") return;
+	PubSub.publish('load',event.currentTarget.value);
 }

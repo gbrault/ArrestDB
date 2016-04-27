@@ -34,7 +34,7 @@ function loadDocument(docname){
 	window.rlite.docname = docname;
 	window.rlite.document="";
 	// empty content div
-	var content = document.getElementById("rlite");
+	var content = document.getElementById("rlitediv");
 	content.innerHTML="";
 	PubSub.clearAllSubscriptions();
 	PubSub.subscribe('loaded',function(msg,data){
@@ -46,6 +46,19 @@ function loadDocument(docname){
     if(!doclist.hasOwnProperty("error")){
 	      var doc = doclist[0];
 	      var fragments=eval(doc.definition);
+	      // purge fragments not belonging to this document
+	      for(var key in window.rlite.fragments){
+	      	var del=true;
+		  	for(i=0;i<fragments.length;i++){
+				if(key==fragments[i]){
+					del = false;
+					break;
+				}
+			}
+			if(del){
+				delete window.rlite.fragments[key];
+			}
+		  }
 	      // load fragments if needed and create document
 	      // create the fragment list
 	      var ids=[]; 
@@ -94,7 +107,7 @@ function loadDocument(docname){
 			 }
 		  }		
 		  // render the document
-		  var content = document.getElementById("rlite");
+		  var content = document.getElementById("rlitediv");
 		  content.innerHTML="";
 		  content.insertAdjacentHTML('beforeend',window.rlite.document);
 		  // now load scripts, styles and editors
@@ -107,6 +120,9 @@ function loadDocument(docname){
     window.rlite.loading=false;
     PubSub.subscribe('user',function(msg,data){
     		loadDocument(window.rlite.docname);
+	});
+	PubSub.subscribe('load',function(msg,data){
+    		loadDocument(data);
 	});
 }
 
