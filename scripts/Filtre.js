@@ -72,10 +72,7 @@ Filtre.prototype.getRunUI = function(div){
 Filtre.prototype.run = function(){
     this.mode='run';
     var textarea = document.getElementById("t_"+this.id);
-<<<<<<< HEAD
-=======
     // if nc (name convention)type need to add default value if not present...
->>>>>>> origin/master
     var def=[];
     var simpledef=JSON.parse(textarea.value);
         for(var i=0; i<simpledef.length; i++){
@@ -175,12 +172,8 @@ Filtre.prototype.setup = function(){
 			entry.assoc=assoc;
 			simpledef.push(entry);
 		}
-<<<<<<< HEAD
-        textarea.innerText= JSON.stringify(simpledef);  // simplified this.def        div.appendChild(textarea);
-=======
         textarea.innerText= JSON.stringify(simpledef);  // simplified this.def
         div.appendChild(textarea);
->>>>>>> origin/master
         var run = document.createElement("BUTTON");
         var caption = document.createTextNode("Run");
         run.appendChild(caption);
