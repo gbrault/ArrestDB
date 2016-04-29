@@ -72,8 +72,31 @@ Filtre.prototype.getRunUI = function(div){
 Filtre.prototype.run = function(){
     this.mode='run';
     var textarea = document.getElementById("t_"+this.id);
-    // todo if nc type need to add default value if not present...
-    this.def = JSON.parse(textarea.value);
+    var def=[];
+    var simpledef=JSON.parse(textarea.value);
+        for(var i=0; i<simpledef.length; i++){
+        	var defrow=simpledef[i];
+			var ncSelect = IdColName(defrow.table);
+			var entry,assoc;
+			if(typeof defrow.select!='undefined'){
+				entry = {ref:defrow.ref,table:defrow.table,select:defrow.select,choice:defrow.choice};
+			} else {
+				entry = {ref:defrow.ref,table:defrow.table,select:ncSelect,choice:defrow.choice};
+			}
+			if(defrow.assoc!=null){
+				var key = IdColName(simpledef[defrow.assoc.ref].table);
+				if((typeof defrow.assoc.foreign !='undefined')&&(defrow.assoc.foreign != key)){					
+					assoc = {ref:defrow.assoc.ref, foreign:defrow.assoc.foreign, col:defrow.assoc.col  };
+				} else {
+					assoc = {ref:defrow.assoc.ref, foreign:key, col:key};
+				}
+			} else {
+				assoc = null;
+			}
+			entry.assoc=assoc;
+			def.push(entry);
+		}
+    this.def = def;
     this.setup();
 }
 
@@ -125,9 +148,30 @@ Filtre.prototype.setup = function(){
         textarea.setAttribute('rows',5);
         textarea.setAttribute('cols',100);
         textarea.setAttribute('id',"t_"+this.id);
-        // todo: simplify the def structure (to avoid complexity and verbosity) if nc type
-        textarea.innerText= JSON.stringify(this.def);
-        div.appendChild(textarea);
+        // simplify the def structure (to avoid complexity and verbosity) if nc (name convention) type
+        var simpledef=[];
+        for(var i=0; i<this.def.length; i++){
+        	var defrow=this.def[i];
+			var ncSelect = IdColName(defrow.table);
+			var entry,assoc;
+			if(defrow.select!=ncSelect){
+				entry = {ref:defrow.ref,table:defrow.table, select:defrow.select,choice:defrow.choice};
+			} else {
+				entry = {ref:defrow.ref,table:defrow.table,choice:defrow.choice};
+			}
+			if(defrow.assoc!=null){
+				if(defrow.assoc.foreign != IdColName(this.def[defrow.assoc.ref].table)){					
+					assoc = {ref:defrow.assoc.ref, foreign:defrow.assoc.foreign, col:defrow.assoc.col  };
+				} else {
+					assoc = {ref:defrow.assoc.ref};
+				}
+			} else {
+				assoc = null;
+			}
+			entry.assoc=assoc;
+			simpledef.push(entry);
+		}
+        textarea.innerText= JSON.stringify(simpledef);  // simplified this.def        div.appendChild(textarea);
         var run = document.createElement("BUTTON");
         var caption = document.createTextNode("Run");
         run.appendChild(caption);
