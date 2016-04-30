@@ -22,6 +22,22 @@ document.onreadystatechange = function () {
 	window.rlite.waitCKEDITOR(docref);	   
   }
 }
+function saveDocument(){
+	var docdef = window.rlite.docdef;
+	var fragments = eval(docdef.definition);
+	for(var i=0; i< fragments.length; i++ ){
+		if(typeof window.rlite.fragmentowners[fragments[i]] != 'undefined'){
+			var owner = window.rlite.fragmentowners[fragments[i]];
+			if(typeof owner.save === 'function'){
+				(function(){
+					if(typeof this.editor !='undefined'){
+						this.save(this.editor);
+					}									
+				}.bind(owner))();
+			}
+		}
+	}
+}
 
 function loadDocument(docname){
 	var i;
@@ -30,6 +46,9 @@ function loadDocument(docname){
 	}
 	if(window.rlite.fragments==undefined){
 		window.rlite.fragments=[];
+	}
+	if(typeof window.rlite.fragmentowners === 'undefined' ){
+		window.rlite.fragmentowners = [];
 	}
 	window.rlite.docname = docname;
 	window.rlite.document="";
@@ -45,6 +64,8 @@ function loadDocument(docname){
     var doclist = CKEDITOR.restajax.getjson(uri);
     if(!doclist.hasOwnProperty("error")){
 	      var doc = doclist[0];
+	      // save in memory (global variables) the document definition
+	      window.rlite.docdef = doc;
 	      var fragments=eval(doc.definition);
 	      // purge fragments not belonging to this document
 	      for(var key in window.rlite.fragments){
@@ -77,6 +98,7 @@ function loadDocument(docname){
 				  	var frag = fraglist[i];
 			    		eval('var config='+frag.data);
 						window.rlite.fragments[frag.name] = {
+							id: frag.IdFragment,
 							name: frag.name,
 							config: config,
 							html: '<!-- fragment: '+frag.name+' -->'+frag.html,
@@ -198,19 +220,22 @@ function loadFragment(frag){
 			}
 			// install editor extensions
 			rliteEditorExtend(event.editor);
+			// who is managing the fragment now!
+	    	window.rlite.fragmentowners[frag.name]=event.editor.rlite;
         });
 	} else if((frag.config.type=='html')&&(typeof frag.config.Filtre === 'object')){
 		// need to add a Filtre
-		var loadFiltreFunction = function(){
+		var loadFiltreFunction = function(fragname){
 			var myNav = null;
 			if(typeof window.Filtre === 'function'){
-				myFiltre = new Filtre(this.mode,this.def,this.id,this.type);
+				myFiltre = new Filtre(this.mode,this.def,this.id,this.type,fragname);
 				myFiltre.setup();
+				window.rlite.fragmentowners[fragname]=myFiltre;
 			} else {
-				setTimeout(loadFiltreFunction,10);
+				setTimeout(loadFiltreFunction,10,fragname);
 			}
-		}.bind(frag.config.Filtre)
-		loadFiltreFunction();
+		}.bind(frag.config.Filtre,frag.name)
+		loadFiltreFunction();		
 	}
 }
 
@@ -482,7 +507,7 @@ function sprintf(format) {
     return newString;
 }
 
-// Dataset API
+// Dataset API + other extension
 // Interface between editor ckrlite widgets and actual data to optimize server sql data access
 // <editor>.ckrlite.dataset[this.id].content select result
 // <editor>.ckrlite.dataset[this.id].select select definition
@@ -492,6 +517,72 @@ function rliteEditorExtend(editor){
 	// init data structures
 	editor.rlite ={};
 	editor.rlite.dataset ={};
+	// let rlite people know which is the editor
+	editor.rlite.editor = editor;
+	// define save
+	editor.rlite.save = function(editor){
+		var docref = editor.config.repository.id;
+		var idColName = IdColName(editor.config.repository.table);
+		if(!!docref){
+			// suppress the fragment comment if it exists
+			// <!-- fragment: rlitedocument -->
+			var start = '<!-- fragment: '+docref+' -->';					
+			var doccontent = editor.getData();
+			if(doccontent.indexOf(start)==0){
+				doccontent=doccontent.substr(start.length);
+			}
+			var uritable=editor.config.repository.script+
+			editor.config.repository.table+"/";
+		var uridoc= uritable+
+			editor.config.repository.column+"/"+
+			docref;     				
+			// get the id of the current document
+			var doc=CKEDITOR.restajax.getjson(uridoc);
+			if(!doc.hasOwnProperty("error")){
+				var uriid=uritable+doc[0][idColName];
+				// what do we need to save?						
+				var content={};
+				content[editor.config.repository.contentcol]=doccontent;
+				var plugins = {};
+				// makes sure editor content is in synch
+				editor.widgets.checkWidgets();
+				// prepare save 
+				var plugins = {};
+				if(typeof editor.rlite !='undefined'){
+					editor.rlite.prepsave(editor,plugins);
+				}
+				content[editor.config.repository.pluginscol]=JSON.stringify(plugins);				
+				CKEDITOR.restajax.putjson(uriid,
+									content							
+									);
+			}
+		}		
+	}
+	// define prepsave
+	editor.rlite.prepsave = function(editor,plugins){
+		// check this data structure is in-line with editor widget content (ckrlite)
+		var widgets=editor.widgets.instances;
+		var test=[];
+		for(var i in widgets){
+			if(typeof widgets[i].ckrlite != 'undefined'){
+				var id = widgets[i].ckrlite.id;
+				test[id]=false;	
+			}
+		}
+		// not all rlite are ckrlite!
+		var keys = Object.keys(test);
+		if(keys.length!=0){
+			var struct = editor.ckrlite.format;
+			editor.rlite.prune(struct,test);
+			struct = editor.ckrlite.dataset;
+			editor.rlite.prune(struct,test);
+			struct = editor.ckrlite.template;
+			editor.rlite.prune(struct,test);
+			struct = editor.ckrlite.rendered;
+			editor.rlite.prune(struct,test);
+			plugins['ckrlite']=editor.ckrlite;	
+		}	
+	}
 	// define prune function
 	editor.rlite.prune = function(struct,test){
 		for(var key in struct){

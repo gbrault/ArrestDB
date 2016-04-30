@@ -13,54 +13,8 @@
 
 		exec: function( editor ) {
 			if ( editor.fire( 'save' ) ) {
-				var docref = editor.config.repository.id;
-				var idColName = IdColName(editor.config.repository.table);
-				if(!!docref){
-					// suppress the fragment comment if it exists
-					// <!-- fragment: rlitedocument -->
-					var start = '<!-- fragment: '+docref+' -->';					
-					var doccontent = editor.getData();
-					if(doccontent.indexOf(start)==0){
-						doccontent=doccontent.substr(start.length);
-					}
-					var uritable=editor.config.repository.script+
-     					editor.config.repository.table+"/";
-     				var uridoc= uritable+
-     					editor.config.repository.column+"/"+
-     					docref;     				
-					// get the id of the current document
-					var doc=CKEDITOR.restajax.getjson(uridoc);
-					if(!doc.hasOwnProperty("error")){
-						var uriid=uritable+doc[0][idColName];
-						// what do we need to save?						
-						var content={};
-						content[editor.config.repository.contentcol]=doccontent;
-						var plugins = {};
-						if(editor.plugins.ckrlite){
-							// check this data structure is in-line with editor widget content
-							editor.widgets.checkWidgets();
-							var widgets=editor.widgets.instances;
-							var test=[];
-							for(var i in widgets){
-								var id = widgets[i].ckrlite.id;
-								test[id]=false;
-							}
-							var struct = editor.ckrlite.format;
-							editor.rlite.prune(struct,test);
-							struct = editor.ckrlite.dataset;
-							editor.rlite.prune(struct,test);
-							struct = editor.ckrlite.template;
-							editor.rlite.prune(struct,test);
-							struct = editor.ckrlite.rendered;
-							editor.rlite.prune(struct,test);
-							
-							plugins['ckrlite']=editor.ckrlite;
-						}
-						content[editor.config.repository.pluginscol]=JSON.stringify(plugins);				
-						CKEDITOR.restajax.putjson(uriid,
-											content							
-											);
-					}
+				if(typeof editor.rlite !='undefined'){
+					editor.rlite.save(editor);
 				}
 			}
 		}

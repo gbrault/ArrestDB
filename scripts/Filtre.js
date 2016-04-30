@@ -1,4 +1,5 @@
-function Filtre(mode,config,id,type){
+function Filtre(mode,config,id,type,editor){
+	this.editor=editor;  // actually this is the fragment owner name (keep editor naming is mandatory for save)
 	this.type=type;     // =='nc' follow naming convention
     this.mode = mode;   // =='run' or 'edit'
     this.def = config;  // filter configuration structure
@@ -29,6 +30,17 @@ function Filtre(mode,config,id,type){
     // code for IE6, IE5
     ajax = new ActiveXObject("Microsoft.XMLHTTP");
     }
+}
+
+Filtre.prototype.save = function(fragname){
+	// saving the definition of the filter into the fragment in the database
+	var IdFragment = window.rlite.fragments[fragname].id;
+	var uri = window.root.uri + window.root.adb + "Fragments/" + IdFragment;
+	// update fragment in memory
+	window.rlite.fragments[fragname].config.Filtre.def = this.def;
+	var content={};
+	content['data']=jsDump.parse(window.rlite.fragments[fragname].config);
+	CKEDITOR.restajax.putjson(uri,content);
 }
 
 Filtre.prototype.getRunUI = function(div){
@@ -172,20 +184,28 @@ Filtre.prototype.setup = function(){
 			entry.assoc=assoc;
 			simpledef.push(entry);
 		}
-        textarea.innerText= JSON.stringify(simpledef);  // simplified this.def
+        textarea.innerText= JSON.stringify(simpledef,null,'\n');  // simplified this.def
         div.appendChild(textarea);
         var run = document.createElement("BUTTON");
         var caption = document.createTextNode("Run");
         run.appendChild(caption);
         run.onclick = function(){this.run();}.bind(this);
         div.appendChild(run);
+        div.style.textAlign="left";
         var editor = CodeMirror.fromTextArea(textarea, {
         	matchBrackets: true,
         	autoCloseBrackets: true,
+        	jsonld: true,
         	mode: "application/ld+json",
         	lineWrapping: true
         });
-        div.style.textAlign="left";
+        /*
+              function getSelectedRange() {
+        		return { from: editor.getCursor(true), to: editor.getCursor(false) };
+      		  }
+        */
+        var start = editor.firstLine(), end = editor.lastLine();
+        editor.autoFormatRange({line:start,ch:0},{line:end+1,ch:0});        
     } 
     else if(this.mode=='run'){
         div.innerHTML="";

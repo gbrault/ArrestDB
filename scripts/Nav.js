@@ -33,7 +33,7 @@ What to produce
     <ul class="links" id="leftmenu"> -> this is given
     <!-- generic commands -->
     <li><a href="#top">Top</a></li>
-    <li><a href="#" onclick='save();'>Save</a></li>
+    <li><a href="#" onclick='file();'>File</a></li>
     <!-- for user.role == document.role or document.role == ""-->
     <li>      
       <div class="select-wrapper">
@@ -92,11 +92,11 @@ What to produce
         // <li><a href="#" onclick='save();'>Save</a></li>
 	    li = document.createElement("LI");
 	    a = document.createElement("a");
-	    txt = document.createTextNode('Save');
+	    txt = document.createTextNode('File');
 	    a.appendChild(txt);
 	    a.setAttribute('href','#');
 	    a.setAttribute('class',"button small fit");
-	    a.onclick=function(){this.Save()}.bind(this); 
+	    a.onclick=function(){this.File();}.bind(this); 
 	    li.appendChild(a);
 	    ul.appendChild(li);    		
 	}    
@@ -127,7 +127,7 @@ What to produce
 	    sel = document.createElement("SELECT");
 	    sel.setAttribute('id',categories[i]);
 	    sel.setAttribute('name',categories[i]);
-	    sel.onclick=function(event){this.Change(event)}.bind(this);
+	    sel.onclick=function(event){this.Change(event);}.bind(this);
 	    var names=[];
 	    if(ajax.status=== 200){
 	        var records = JSON.parse(ajax.responseText);
@@ -159,7 +159,44 @@ What to produce
 	}   
 }
 
-Nav.prototype.Save = function(){
+Nav.prototype.File = function(){
+	var dialog = document.getElementById("navdialog");
+	var savenav = document.getElementById("savenav");
+	var deletenav = document.getElementById("deletenav");
+	var cancelnav = document.getElementById("cancelnav");
+	var textareanav	= document.getElementById("textareanav");
+	if(typeof dialog !='undefined'){
+		if(!(typeof dialog.showModal ==='function')){
+			dialogPolyfill.registerDialog(dialog);
+		}
+		if(typeof dialog.editor==='undefined'){
+			textareanav.innerText= JSON.stringify(window.rlite.docdef);
+			dialog.editor = CodeMirror.fromTextArea(textareanav, {
+	        	matchBrackets: true,
+	        	autoCloseBrackets: true,
+	        	jsonld: true,
+	        	mode: "application/ld+json",
+	        	lineWrapping: true
+	        });
+	        cancelnav.addEventListener('click', function(dialog) {
+      			dialog.close();
+    			}.bind(this,dialog));
+	        savenav.addEventListener('click', function(dialog) {
+	        	saveDocument();
+      			dialog.close();
+    			}.bind(this,dialog));
+	        deletenav.addEventListener('click', function(dialog) {
+      			dialog.close();
+    			}.bind(this,dialog));    			    						
+		} else {
+			dialog.editor.getDoc().setValue(JSON.stringify(window.rlite.docdef));
+			dialog.editor.save();
+		}
+		dialog.showModal();			
+        var start = dialog.editor.firstLine(), end = dialog.editor.lastLine();
+        dialog.editor.autoFormatRange({line:start,ch:0},{line:end+1,ch:0});   
+		// Form cancel button closes the dialog box
+   }
 }
 
 Nav.prototype.Change = function(event){

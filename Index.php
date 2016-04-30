@@ -22,13 +22,21 @@ require('security.php')
 		<textarea id="hideneditor" ></textarea>
 	</div>
 	<!--  Default 'boot' scripts -->
-	<script>var root={uri:'/ArrestDB/',adb:'ArrestDB.php/'};</script>
+	<!-- todo: http://marijnhaverbeke.nl/uglifyjs to compress all those scripts -->
+	<script>
+		var root={uri:'/ArrestDB/',adb:'ArrestDB.php/'};
+	</script>
 	<script src="ckeditor/pubsub.js"></script>
 	<script src="ckeditor/ckeditor.js"></script>
 	<script src="scripts/aes/aes.js">/* AES JavaScript implementation */</script>
 	<script src="scripts/aes/aes-ctr.js">/* AES Counter Mode implementation */</script>
+	<script src="scripts/diff_match_patch.js"></script>
 	<script src="scripts/codemirror-compressed.js"></script>
+	<script src="scripts/formatting.js"></script>
+	<script src="scripts/jsDump.js"></script>
 	<link rel="stylesheet" href="scripts/codemirror.css" />
+	<script src="scripts/dialog-polyfill/dialog-polyfill.js">/* AES Counter Mode implementation */</script>
+	<link rel="stylesheet" href="scripts/dialog-polyfill/dialog-polyfill.css" />
     <script src='scripts/load.js'></script>
 	</body>
 </html>
