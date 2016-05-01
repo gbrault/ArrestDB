@@ -560,7 +560,9 @@ $result = ArrestDB::Serve('POST', '/(#any)', function ($table)
 
 		else
 		{
+			$index = $result;
 			$result = ArrestDB::$HTTP[201];
+			$result["index"] = $index;
 		}
 	}
 

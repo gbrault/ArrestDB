@@ -89,7 +89,7 @@ What to produce
     li.appendChild(a);
     ul.appendChild(li);
     if(!(window.user==undefined)&&(window.user.role=='admin')){
-        // <li><a href="#" onclick='save();'>Save</a></li>
+        // <li><a href="#" onclick='save();'>File</a></li>
 	    li = document.createElement("LI");
 	    a = document.createElement("a");
 	    txt = document.createTextNode('File');
@@ -98,7 +98,22 @@ What to produce
 	    a.setAttribute('class',"button small fit");
 	    a.onclick=function(){this.File();}.bind(this); 
 	    li.appendChild(a);
-	    ul.appendChild(li);    		
+	    ul.appendChild(li);
+	    // add the view button
+	    // <li><a href="#" onclick='view();'>View</a></li>
+	    li = document.createElement("LI");
+	    a = document.createElement("a");
+	    txt = document.createTextNode('View');
+	    a.appendChild(txt);
+	    a.setAttribute('href','#');
+	    if( (typeof window.user.view === 'undefined') || !window.user.view ){
+			a.setAttribute('class',"button special small fit");
+		} else {
+			a.setAttribute('class',"button alt small fit");
+		}	
+	    a.onclick=function(a){this.View(a);}.bind(this,a); 
+	    li.appendChild(a);
+	    ul.appendChild(li);	      		
 	}    
     // find categories (distinct categories Alphabetic order)
     var uri = this.baseuri+'Documents?columns=category&distinct&by=category';
@@ -159,9 +174,29 @@ What to produce
 	}   
 }
 
+Nav.prototype.View =function(a){
+	if(typeof window.user == 'object'){
+		if (typeof window.user.view != 'undefined'){
+			if(window.user.view){
+				window.user.view=false;
+				a.setAttribute('class','button special small fit');
+			} else {
+				window.user.view=true;
+				a.setAttribute('class','button alt small fit');
+			}
+		} else {
+			window.user.view=true;
+			a.setAttribute('class','button alt small fit');
+		}
+	}
+	PubSub.publish('load',window.rlite.docname);  // reload the document
+}
+
 Nav.prototype.File = function(){
 	var dialog = document.getElementById("navdialog");
+	var newnav = document.getElementById("newnav");
 	var savenav = document.getElementById("savenav");
+	var rennav = document.getElementById("rennav");
 	var deletenav = document.getElementById("deletenav");
 	var cancelnav = document.getElementById("cancelnav");
 	var textareanav	= document.getElementById("textareanav");
@@ -185,9 +220,28 @@ Nav.prototype.File = function(){
 	        	saveDocument();
       			dialog.close();
     			}.bind(this,dialog));
+	        rennav.addEventListener('click', function(dialog) {
+	        	var docdef = dialog.editor.getValue();
+	        	var vdocdef = JSON.parse(docdef); 
+	        	dialog.close();
+	        	renDocument(docdef);      			
+    			}.bind(this,dialog));
 	        deletenav.addEventListener('click', function(dialog) {
-      			dialog.close();
+	        	var docdef = dialog.editor.getValue();
+	        	var vdocdef = JSON.parse(docdef); 
+	        	dialog.close();
+	        	// cannot delete rlite document (root of the site!)
+	        	if(vdocdef.name!='rlite'){
+					deleteDocument(docdef);
+					PubSub.publish('load','rlite');
+				}      			      	
     			}.bind(this,dialog));    			    						
+	        newnav.addEventListener('click', function(dialog) {
+	        	var docdef = dialog.editor.getValue();
+	        	var vdocdef = JSON.parse(docdef); 
+	        	newDocument(docdef);
+      			dialog.close();
+      			}.bind(this,dialog));   			    						
 		} else {
 			dialog.editor.getDoc().setValue(JSON.stringify(window.rlite.docdef));
 			dialog.editor.save();

@@ -36,15 +36,29 @@ Filtre.prototype.save = function(fragname){
 	// saving the definition of the filter into the fragment in the database
 	var IdFragment = window.rlite.fragments[fragname].id;
 	var uri = window.root.uri + window.root.adb + "Fragments/" + IdFragment;
-	// update fragment in memory
+	// update fragment in memory data part
 	window.rlite.fragments[fragname].config.Filtre.def = this.def;
+	// update fragment in memory html part
+	var id=window.rlite.fragments[fragname].config.Filtre.id;
+	var idhtml=window.rlite.fragments[fragname].config.Filtre.idhtml;
+	var div = document.getElementById(idhtml);
+	var html="<div id='"+id+"'></div>"+div.outerHTML;
+    // save to database
 	var content={};
 	content['data']=jsDump.parse(window.rlite.fragments[fragname].config);
+	content['html']=html;	
 	CKEDITOR.restajax.putjson(uri,content);
 }
 
 Filtre.prototype.getRunUI = function(div){
     // return HTML string for Run Time (i.e: filter user interface)
+    div.style.textAlign="center";
+    // todo not generic: suppose banner to be under Navigation
+    var header = document.getElementById("header");
+    var h = header.getClientRects()[0].height;
+    var div1 = document.createElement("DIV");
+    div1.style.minHeight=Math.floor(h*1.2)+"px";
+    div.appendChild(div1);
     var ul = document.createElement("UL");
     ul.setAttribute('class','actions small');
     for(var i=0; i<this.def.length; i++){
@@ -157,6 +171,11 @@ Filtre.prototype.setup = function(){
             delete this.myAutoCompletes[key];
         }
         div.innerHTML="";
+	    var header = document.getElementById("header");
+	    var h = header.getClientRects()[0].height;
+	    var div1 = document.createElement("DIV");
+	    div1.style.minHeight=Math.floor(h*1.2)+"px";
+	    div.appendChild(div1);
         var textarea = document.createElement("TEXTAREA");
         textarea.setAttribute('rows',5);
         textarea.setAttribute('cols',100);
@@ -209,7 +228,6 @@ Filtre.prototype.setup = function(){
     } 
     else if(this.mode=='run'){
         div.innerHTML="";
-        div.style.textAlign="center";
         this.getRunUI(div);
         setTimeout(function(){
                 for(var i=0; i<this.def.length; i++){

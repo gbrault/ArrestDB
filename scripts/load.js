@@ -22,6 +22,121 @@ document.onreadystatechange = function () {
 	window.rlite.waitCKEDITOR(docref);	   
   }
 }
+
+function getRandom() {
+  var array = new Uint8Array(3);
+  if(typeof window.crypto !='undefined'){
+  	window.crypto.getRandomValues(array);
+  } else {
+  	for(var i=0; i<3; i++){
+		array[i] = Math.floor(Math.random() * (256 - 0)) + 0;
+	}  	
+  }
+  return ""+array[0]+256*array[1]+256*256*array[2];
+}
+function renDocument(docdef){
+	// change the names and other properties of the current loaded object
+	var newdocdef = JSON.parse(docdef);
+	// get document current definition
+	var lastdocdef = window.rlite.docdef;
+	// save all data except the IdDocument
+	
+	var uri = root.uri+root.adb+"Documents/"+lastdocdef.IdDocument;
+	delete newdocdef.IdDocument;
+	CKEDITOR.restajax.putjson(uri,newdocdef,function(newdocdef,lastdocdef,data){
+		if(typeof data.success != 'undefined'){
+			// then rename all fragments if needed (except shared ones!!!)
+			eval("var lastfragments="+lastdocdef.definition+";")
+			eval("var newfragments="+newdocdef.definition+";");
+			for(var i=0; i<newfragments.length;i++ ){
+				if(newfragments[i]!= lastfragments[i]){
+					// if not shared, rename needed
+					uri = root.uri+root.adb+"Fragments/name/"+lastfragments[i];
+					var lastfragment = CKEDITOR.restajax.getjson(uri);
+					eval("var config ="+lastfragment[0].data);
+					if(config.clone){
+						// none shared
+						uri = root.uri+root.adb+"Fragments/"+lastfragment[0].IdFragment;
+						CKEDITOR.restajax.putjson(uri,{name:newfragments[i]}, function(data){
+							 // do it blind...
+							}); 
+					}
+				}
+			}
+		}
+	}.bind(null,newdocdef,lastdocdef));
+	setTimeout(function(){
+		PubSub.publish('load',newdocdef.name);
+	},2000); // let 2 seconds to reload document
+}
+function deleteDocument(docdef){
+	var docdefinition = JSON.parse(docdef);
+	var uri=root.uri+root.adb+"Documents/"+docdefinition.IdDocument;
+	CKEDITOR.restajax.deljson(uri);
+	eval("var fragments="+docdefinition.definition+";");
+	for(var i=0;i<fragments.length;i++){
+		uri=root.uri+root.adb+"Fragments/name/"+fragments[i]+'?columns="IdFragment,data"';
+		var fragment = CKEDITOR.restajax.getjson(uri);
+		eval("var config ="+fragment[0].data);
+		if(config.clone){
+			uri = root.uri+root.adb+"Fragments/"+fragment[0].IdFragment;
+			CKEDITOR.restajax.deljson(uri);
+		}
+	}
+}
+function newDocument(docdef){
+	var docdefinition = JSON.parse(docdef);
+	if(docdefinition.name==window.rlite.docname){
+		docdefinition.name += getRandom();
+	}
+	delete docdefinition.IdDocument;
+	var uri=root.uri+root.adb+"Documents";
+	CKEDITOR.restajax.postjson(uri,docdefinition,function(docdefinition,data){
+		// main document is created
+		// now, copy fragments (renaming them adding _ char at the end)
+		var i={i:0};
+		if(typeof data.success != 'undefined'){
+			docdefinition.IdDocument=data.index;
+			var copyFragments=function(docdefinition,i,data){
+				if((typeof data =='undefined')||(typeof data.success != 'undefined')){
+					var fragments = eval(docdefinition.definition);
+					if(i.i==fragments.length){
+						// update the new document definition
+						var uri=root.uri+root.adb+"Documents/"+docdefinition.IdDocument;
+						var docdef = {	definition:docdefinition.definition, 
+										category:docdefinition.category, 
+										role:docdefinition.role};					
+						CKEDITOR.restajax.putjson(uri,docdef,function(docdefinition,data){
+							if(typeof data.success != 'undefined'){
+								PubSub.publish('load',docdefinition.name); // load the new document
+							} else {
+								PubSub.publish('load','rlite');
+							}						
+						}.bind(null,docdefinition));			
+						return; // it's over
+					}
+					var uri = root.uri+root.adb+"Fragments/name/"+fragments[i.i];
+					var fragment = CKEDITOR.restajax.getjson(uri);
+					eval("var config ="+fragment[0].data);
+					if(config.clone){
+						var rnd = getRandom();
+						fragments[i.i]+=rnd;						
+						docdefinition.definition=jsDump.parse(fragments);
+						uri = root.uri+root.adb+"Fragments";
+						delete fragment[0].IdFragment;
+						fragment[0].name +=rnd;					
+						i.i++;
+						CKEDITOR.restajax.postjson(uri,fragment[0],copyFragments);
+					} else {
+						i.i++;
+						copyFragments();
+					}				
+				}
+			}.bind(null,docdefinition,i);
+			copyFragments();
+		}
+	}.bind(null,docdefinition));
+}
 function saveDocument(){
 	var docdef = window.rlite.docdef;
 	var fragments = eval(docdef.definition);
@@ -101,7 +216,7 @@ function loadDocument(docname){
 							id: frag.IdFragment,
 							name: frag.name,
 							config: config,
-							html: '<!-- fragment: '+frag.name+' -->'+frag.html,
+							html: '<!-- begin fragment: '+frag.name+' -->'+frag.html+'<!-- end fragment: '+frag.name+' -->',
 							plugins: frag.plugins
 						}			  	
 				  }
@@ -112,12 +227,14 @@ function loadDocument(docname){
 	      	// fragments are cached in the window.rlite.fragments array
 	      	if(window.rlite.fragments[fragments[i]]!=undefined){
 				if((window.rlite.fragments[fragments[i]].config.type=='html')
-				   ||((window.user==undefined)&&
+				   ||(((typeof window.user==='undefined')||
+				   		((typeof window.user==='object')&&(typeof window.user.view !='undefined')&&(window.user.view))
+				   	   )&&
 				      ( window.rlite.fragments[fragments[i]].config.type=='editor'))){
 					window.rlite.document = window.rlite.document.concat(
 				                             window.rlite.fragments[fragments[i]].html);
 					
-				} else if((window.user!=undefined)&&
+				} else if(((window.user!=undefined)&&(typeof window.user.view !='undefined')&&(!window.user.view))&&
 				          ( window.rlite.fragments[fragments[i]].config.type=='editor')){
 					window.rlite.document = window.rlite.document.concat(
 					                         '<!-- fragment textarea: '+
@@ -144,7 +261,11 @@ function loadDocument(docname){
     		loadDocument(window.rlite.docname);
 	});
 	PubSub.subscribe('load',function(msg,data){
-    		loadDocument(data);
+		// encapsulate to make sure browser ready
+		setTimeout(
+			function(data){
+				loadDocument(data);
+			}.bind(null,data),0);    	
 	});
 }
 
@@ -176,7 +297,7 @@ function loadFragment(frag){
 				document.getElementsByTagName('head')[0].appendChild(ls);
 			}
 		}
-	} else if(!(window.user==undefined)&&(frag.config.type=='editor')){
+	} else if(!(window.user==undefined)&&((typeof window.user.view !='undefined')&&(!window.user.view))&&(frag.config.type=='editor')){
 		// load a CKEDITOR section...
 		// update the repository information
 		frag.config.editor.repository.script = window.root.uri+window.root.adb;
@@ -223,20 +344,68 @@ function loadFragment(frag){
 			// who is managing the fragment now!
 	    	window.rlite.fragmentowners[frag.name]=event.editor.rlite;
         });
-	} else if((frag.config.type=='html')&&(typeof frag.config.Filtre === 'object')){
-		// need to add a Filtre
-		var loadFiltreFunction = function(fragname){
-			var myNav = null;
-			if(typeof window.Filtre === 'function'){
-				myFiltre = new Filtre(this.mode,this.def,this.id,this.type,fragname);
-				myFiltre.setup();
-				window.rlite.fragmentowners[fragname]=myFiltre;
+	} else if(frag.config.type=='html'){
+		if(typeof frag.config.Filtre === 'object'){
+			if((typeof window.user === 'object')&&(typeof window.user.view !='undefined')&&(window.user.view)){
+				// just put the 'html' part
+				window.rlite.fragmentowners[frag.name]= new htmlEditor(frag.name);
+				// hidden by navigation... // todo not generic: suppose banner to be under Navigation
+				// add a fake div before the active filter div
+				var div = document.getElementById(frag.config.Filtre.id);
+				var parentDiv = div.parentElement;				
+				var header = document.getElementById("header");
+    			var h = header.getClientRects()[0].height;
+    			var div1 = document.createElement("DIV");
+    			div1.style.minHeight=Math.floor(h*1.2)+"px";
+    			parentDiv.insertBefore(div1,div);
 			} else {
-				setTimeout(loadFiltreFunction,10,fragname);
+				// need to add a Filtre
+				var loadFiltreFunction = function(fragname){
+					var myNav = null;
+					if(typeof window.Filtre === 'function'){
+						myFiltre = new Filtre(this.mode,this.def,this.id,this.type,fragname);
+						myFiltre.setup();
+						window.rlite.fragmentowners[fragname]=myFiltre;
+					} else {
+						setTimeout(loadFiltreFunction,10,fragname);
+					}
+				}.bind(frag.config.Filtre,frag.name)
+				loadFiltreFunction();		
 			}
-		}.bind(frag.config.Filtre,frag.name)
-		loadFiltreFunction();		
+	    } else {
+			// add a simple html "editor" (edit with chrome or web browser developper tools and just program "save")
+			window.rlite.fragmentowners[frag.name]= new htmlEditor(frag.name);
+		}
 	}
+}
+
+function htmlEditor(editor){
+	this.editor=editor;
+}
+
+htmlEditor.prototype.save = function(fragname){
+	var IdFragment = window.rlite.fragments[fragname].id;
+	var uri = window.root.uri + window.root.adb + "Fragments/" + IdFragment;
+	// update fragment in memory html part
+	var html = betweenFingerprintInDocument(fragname);
+	var ohtml=trimFingerprint(fragname,window.rlite.fragments[fragname].html);
+	// save html if changes made and if allowed (config.save)
+	if((ohtml!=html) && window.rlite.fragments[fragname].config.save){
+		var content={};
+		content['html']=html;	
+		CKEDITOR.restajax.putjson(uri,content);		
+	}	
+	/*
+	var id=window.rlite.fragments[fragname].config.Filtre.id;
+	var idhtml=window.rlite.fragments[fragname].config.Filtre.idhtml;
+	var div = document.getElementById(idhtml);
+	var html="<div id='"+id+"'></div>"+div.outerHTML;
+    // save to database
+	var content={};
+	content['data']=jsDump.parse(window.rlite.fragments[fragname].config);
+	content['html']=html;	
+	CKEDITOR.restajax.putjson(uri,content);	
+	*/
 }
 
 function loadHiddenEditor(){
@@ -321,7 +490,7 @@ function getEditorFrame(editor){
 function Navigate(seditor,tag){
 	// lets 'normal' behaviour exec and then do what's we want
 	setTimeout(function(){
-		if(window.user==undefined){
+		if((window.user==undefined)||((typeof window.user === 'object')&&(typeof window.user.view !== 'undefined')&&(window.user.view))){
 			location.href = "#";
 	        location.href = "#"+tag;
 		} else {
@@ -507,6 +676,44 @@ function sprintf(format) {
     return newString;
 }
 
+function trimFingerprint(docref,doccontent){
+	// suppress the fragment fingerprint if it exists
+	// <!-- begin fragment: rlitedocument -->
+	// <!-- end fragment: rlitedocument -->
+	var start = '<!-- begin fragment: '+docref+' -->';
+	var end = '<!-- end fragment: '+docref+' -->';	
+	var istart = doccontent.indexOf(start);							
+	if(istart>=0){
+		doccontent=doccontent.substr(istart+start.length);
+	}
+	var iend = doccontent.indexOf(end);
+	if(iend>=0){
+		doccontent=doccontent.substr(0,iend);
+	}
+	return doccontent;
+}
+function betweenFingerprintInDocument(docref){
+	var found = false;
+	var start = '<!-- begin fragment: '+docref+' -->';
+	var end = '<!-- end fragment: '+docref+' -->';								
+	var doccontent=document.body.innerHTML;
+	var istart = doccontent.indexOf(start);
+	if(istart>=0){
+		doccontent=doccontent.substr(istart+start.length);
+		found=true;
+	}
+	var iend = doccontent.indexOf(end);
+	if(iend>=0){
+		doccontent=doccontent.substr(0,iend);
+	} else {
+		found=false;
+	}
+	if(found){
+		return doccontent;
+	}
+	return "";
+}
+
 // Dataset API + other extension
 // Interface between editor ckrlite widgets and actual data to optimize server sql data access
 // <editor>.ckrlite.dataset[this.id].content select result
@@ -524,13 +731,8 @@ function rliteEditorExtend(editor){
 		var docref = editor.config.repository.id;
 		var idColName = IdColName(editor.config.repository.table);
 		if(!!docref){
-			// suppress the fragment comment if it exists
-			// <!-- fragment: rlitedocument -->
-			var start = '<!-- fragment: '+docref+' -->';					
 			var doccontent = editor.getData();
-			if(doccontent.indexOf(start)==0){
-				doccontent=doccontent.substr(start.length);
-			}
+			doccontent = trimFingerprint(docref,doccontent);
 			var uritable=editor.config.repository.script+
 			editor.config.repository.table+"/";
 		var uridoc= uritable+

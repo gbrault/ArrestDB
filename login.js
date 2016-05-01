@@ -71,7 +71,12 @@ CKEDITOR.dialog.add( 'login', function( editor ) {
 									// user.First = first name
 									// user.Last = last name
 									// user.user = user id
+									var view=false;
+									if((typeof window.user!='undefined')&&(typeof window.user.view !='undefined')){
+										view=window.user.view
+									}
 									window.user=user;
+									window.user.view = view;
 									PubSub.publish('user',
 											        user);
 								}
