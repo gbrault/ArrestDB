@@ -496,7 +496,9 @@ function Navigate(seditor,tag){
 		} else {
 			var editor = CKEDITOR.instances[seditor];
 			var f = getEditorFrame(editor);
-			f.contentWindow.scrollTo(0,f.contentDocument.getElementById(tag).offsetTop);
+			if( (typeof f.contentDocument.getElementById(tag) !="undefined") &&
+				(typeof f.contentDocument.getElementById(tag).offsetTop !="undefined"))
+				f.contentWindow.scrollTo(0,f.contentDocument.getElementById(tag).offsetTop);
 		}
 	},0,seditor,tag);
 }
