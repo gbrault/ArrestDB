@@ -497,6 +497,7 @@ function Navigate(seditor,tag){
 			var editor = CKEDITOR.instances[seditor];
 			var f = getEditorFrame(editor);
 			if( (typeof f.contentDocument.getElementById(tag) !="undefined") &&
+			    ( f.contentDocument.getElementById(tag) != null ) &&
 				(typeof f.contentDocument.getElementById(tag).offsetTop !="undefined"))
 				f.contentWindow.scrollTo(0,f.contentDocument.getElementById(tag).offsetTop);
 		}
