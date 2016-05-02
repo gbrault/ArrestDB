@@ -1,4 +1,4 @@
-function Nav(menuid){
+function Nav(menuid,navactions){
 /*
 // requires skel.io and css
 Input data
@@ -58,12 +58,14 @@ What to produce
       </div>
     </li>    
     </ul>
-    <ul class="actions vertical">
+    <ul id="navactions" class="actions vertical">
+	<li><a id="datamodel" target="_blank" href="#" class="button special fit">DataModel</a></li>
 	<li><a id="test" href="#" class="button special fit">Test</a></li>
 	<li><a href="https://github.com/gbrault/ArrestDB" class="button fit">Documentation</a></li>
     </ul>
 </nav>
 */
+// menuid navigation construction
     var i,j,ul,li,a,txt,div,sel,opt;
     this.menuid=menuid;
     ul = document.getElementById(menuid);
@@ -171,7 +173,27 @@ What to produce
 			li.appendChild(div);
 			ul.appendChild(li);
 		}	
-	}   
+	}
+// navactions menu construction
+    this.navactions=navactions;
+    ul = document.getElementById(navactions);
+    // <li><a id="datamodel" target="_blank" href="#" class="button special fit">DataModel</a></li>
+    if((ul==undefined)||(ul==null)) return;
+    ul.innerHTML="";
+    if(!(window.user==undefined)&&(window.user.role=='admin')){
+	    li = document.createElement("LI");
+	    a = document.createElement("a");
+	    txt = document.createTextNode('DataModel');
+	    a.appendChild(txt);
+	    var uri = root.uri+root.adminer;
+	    a.setAttribute('href',uri);
+	    a.setAttribute('id','datamodel');
+	    a.setAttribute('target','_blank');
+	    a.setAttribute('class','datamodel');
+	    a.setAttribute('class',"button small fit");
+	    li.appendChild(a);
+	    ul.appendChild(li);
+    }
 }
 
 Nav.prototype.View =function(a){
