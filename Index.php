@@ -24,7 +24,7 @@ require('security.php')
 	<!--  Default 'boot' scripts -->
 	<!-- todo: http://marijnhaverbeke.nl/uglifyjs to compress all those scripts -->
 	<script>
-		var root={uri:'/ArrestDB/',adb:'ArrestDB.php/'};
+		var root={uri:'/ArrestDB/',adb:'ArrestDB.php/',adminer:'adminer.php?sqlite=&username=&db=Northwind.sqlite'};
 	</script>
 	<script src="ckeditor/pubsub.js"></script>
 	<script src="ckeditor/ckeditor.js"></script>
