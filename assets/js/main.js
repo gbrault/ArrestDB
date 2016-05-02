@@ -115,7 +115,8 @@ if(window.skel==undefined){
 	  });
 	  
 	  var $test = document.querySelector('#test');
-	  $test.addEventListener('click',function(event){
+	  if(typeof $test !='undefined'){
+	  	  $test.addEventListener('click',function(event){
 	       if(CKEDITOR){
 		   	  if(CKEDITOR.restajax==undefined){
 			  	CKEDITOR.plugins.load('restajax', function(){
@@ -127,7 +128,8 @@ if(window.skel==undefined){
 			  	console.log($value);
 			  }
 		   }		   
-	  });
+	  	  });	
+	  }
  }
 };
 main();
