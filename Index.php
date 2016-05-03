@@ -5,6 +5,7 @@ require('security.php')
 
 <!DOCTYPE HTML>
 <!-- rlite v0.0.1 | (c) gbrault 2016 | MIT licensed -->
+<!-- http://getskeleton.com/ -->
 <html>
 	<head>
 		<title>Rlite</title>
