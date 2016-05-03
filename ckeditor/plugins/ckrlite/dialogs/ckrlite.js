@@ -174,6 +174,9 @@ CKEDITOR.dialog.add( 'ckrlite', function( editor ) {
 								this.setValue( eckrlite.format[wckrlite.id] );	
 						},
 						commit: function( widget ) {
+							var eckrlite = widget.editor.ckrlite;
+							var wckrlite = widget.ckrlite;
+							eckrlite.format[wckrlite.id]=this.getValue();
 						}
 					},
 					{
@@ -188,8 +191,9 @@ CKEDITOR.dialog.add( 'ckrlite', function( editor ) {
 								this.setValue( eckrlite.template[wckrlite.id] );	
 						},
 						commit: function( widget ) {
-						},
-						onChange: function(api){
+							var eckrlite = widget.editor.ckrlite;
+							var wckrlite = widget.ckrlite;
+							eckrlite.template[wckrlite.id]=this.getValue();
 						}
 					},
 					{
