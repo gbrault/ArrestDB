@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<script src="dist/showdown.js"></script>
+		<script src="../../assets/js/skel.min.js"></script>
+		<link href="../../assets/css/main.css" rel="stylesheet">
+	</head>
+	<body>
+	<ul class="actions" ><li><a id="showhide" class="button alt small" href="#">Hide</a></li></ul>
+	<div class="row">
+	   <div class="6u 12u$(medium)">
+			<textarea id="markdown"></textarea>
+	   </div>		
+	   <div id='crmarkdown' class="6u 12u$(medium)">
+			<div id="rmarkdown"></div>
+	   </div>		
+    </div>		
+<script>
+	var showhide = document.getElementById('showhide');
+	var markdown = document.getElementById('markdown');
+	var rmarkdown = document.getElementById('rmarkdown');
+	var crmarkdown = document.getElementById('crmarkdown');
+	var converter = new showdown.Converter();
+	markdown.addEventListener('change',function(){
+		var html= converter.makeHtml(markdown.value);
+		rmarkdown.innerHTML=html;
+		markdown.style.height = rmarkdown.scrollHeight+'px';				
+	});
+	showhide.addEventListener('click',function(){
+		if(this.innerText=="Hide"){
+			this.innerText="Show";
+			markdown.style.display="none";
+			crmarkdown.setAttribute('class','');
+		} else {
+			this.innerText="Hide";
+			markdown.style.display="inherit";
+			crmarkdown.setAttribute('class','6u 12u$(medium)');			
+		}
+	}.bind(showhide));
+</script>
+	</body>
+</html>

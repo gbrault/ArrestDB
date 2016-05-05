@@ -21,6 +21,7 @@
  * 
  */
 // Register the plugin within the editor.
+
 CKEDITOR.plugins.add('ckrlite', {
     // This plugin requires the Widgets System defined in the 'widget' and the 'ajax' plugins.
     requires: 'widget,restajax',
@@ -34,6 +35,68 @@ CKEDITOR.plugins.add('ckrlite', {
         // Register the editing dialog.
         CKEDITOR.dialog.add('ckrlite', this.path + 'dialogs/ckrlite.js'); 
         
+        /*  for context menu */
+        editor.addMenuGroup( 'ckrlite', 1 );
+        
+ 		var command = editor.addCommand( 'ckrlite', {
+        exec: function( editor ) {
+        	// will never come here!
+            console.log( 'Executing a command for the editor name "' + editor.name + '"!' );
+            }
+        } );
+		command.modes = { wysiwyg: true };
+        
+        if ( editor.addMenuItems ) {
+			editor.addMenuItems( {
+				ckrlite: {
+					label: 'database',
+					command: 'ckrlite',
+					group: 'ckrlite',
+					order: 1,
+					onClick: function(){
+						console.log(editor.name);
+						// need to find the element to edit???
+						if(typeof this.rlite.target==='object'){
+							var id = this.rlite.target.getAttribute('data-id');
+							for(var key in this.widgets.instances){
+								var widget = this.widgets.instances[key];
+								if(widget.ckrlite.id == id){
+									widget.edit();
+								}
+							}
+						}
+					}.bind(editor)
+				}
+			});
+		}
+		if ( editor.contextMenu ) {
+			editor.contextMenu.addListener( function( element ) {
+				var found = false;
+				var delement = element.$;
+				while(true){
+					if(delement.className == 'ckrlite cke_widget_element'){
+						found=true;
+						this.rlite.target = delement;
+						break;
+					}
+					if(delement.parentElement.tagName!='BODY'){
+						delement = delement.parentElement;
+					} else{
+						break;
+					}
+				}
+				if (found ) {
+					var cmd = this.getCommand('ckrlite');
+					cmd.enable();
+					cmd.state= CKEDITOR.TRISTATE_ON;
+					return {
+						ckrlite: CKEDITOR.TRISTATE_ON
+					};
+				}
+				return null;
+			}.bind(editor) );
+		}
+        /* for context menu */
         // Register the ckrlite widget.
         editor.widgets.add('ckrlite', {
             // Allow all HTML elements, classes, and styles that this widget requires.
