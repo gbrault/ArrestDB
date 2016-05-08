@@ -25,10 +25,10 @@ function Filtre(mode,config,id,type,editor){
     this.ajax = null;   // communication with the server
     this.myAutoCompletes={};
     if (window.XMLHttpRequest) {
-    ajax = new XMLHttpRequest();
+    this.ajax = new XMLHttpRequest();
     } else {
     // code for IE6, IE5
-    ajax = new ActiveXObject("Microsoft.XMLHTTP");
+    this.ajax = new ActiveXObject("Microsoft.XMLHTTP");
     }
 }
 
@@ -55,9 +55,11 @@ Filtre.prototype.getRunUI = function(div){
     div.style.textAlign="center";
     // todo not generic: suppose banner to be under Navigation
     var header = document.getElementById("header");
-    var h = header.getClientRects()[0].height;
     var div1 = document.createElement("DIV");
-    div1.style.minHeight=Math.floor(h*1.2)+"px";
+    if(header!=null){
+		var h = header.getClientRects()[0].height;	    
+	    div1.style.minHeight=Math.floor(h*1.2)+"px";
+	}
     div.appendChild(div1);
     var ul = document.createElement("UL");
     ul.setAttribute('class','actions small');
@@ -171,10 +173,12 @@ Filtre.prototype.setup = function(){
             delete this.myAutoCompletes[key];
         }
         div.innerHTML="";
+        var div1 = document.createElement("DIV");
 	    var header = document.getElementById("header");
-	    var h = header.getClientRects()[0].height;
-	    var div1 = document.createElement("DIV");
-	    div1.style.minHeight=Math.floor(h*1.2)+"px";
+	    if(header!=null){
+			 var h = header.getClientRects()[0].height;
+			 div1.style.minHeight=Math.floor(h*1.2)+"px";
+		}
 	    div.appendChild(div1);
         var textarea = document.createElement("TEXTAREA");
         textarea.setAttribute('rows',5);
@@ -239,11 +243,11 @@ Filtre.prototype.setup = function(){
                         source: function(term, response){
                             if(this.assoc==null){
                                 var uri = this.baseuri+this.table+"/"+this.choice+"/%25"+term+"%25?limit=20";
-                                ajax.open("GET", uri, false);
-                                ajax.send(null);
+                                this.ajax.open("GET", uri, false);
+                                this.ajax.send(null);
                                 var choices=[];
-                                if(ajax.status=== 200){
-                                    var records = JSON.parse(ajax.responseText);
+                                if(this.ajax.status=== 200){
+                                    var records = JSON.parse(this.ajax.responseText);
                                     for(var i=0; i<records.length; i++){
                                         choices.push([records[i][this.choice],records[i][this.select],this.ref]);
                                     }
@@ -256,10 +260,10 @@ Filtre.prototype.setup = function(){
                                     if(this.def[i].ref==this.assoc.ref){
                                         if(this.def[i].key!=undefined){
                                             var uri = this.baseuri+this.table+"/"+this.assoc.col+"/"+this.def[i].key;
-                                            ajax.open("GET", uri, false);
-                                            ajax.send(null);                                            
-                                            if(ajax.status=== 200){
-                                                var records = JSON.parse(ajax.responseText);
+                                            this.ajax.open("GET", uri, false);
+                                            this.ajax.send(null);                                            
+                                            if(this.ajax.status=== 200){
+                                                var records = JSON.parse(this.ajax.responseText);
                                                 for(var i=0; i<records.length; i++){
                                                     if(records[i][this.choice].indexOf(term)>=0){
                                                         choices.push([records[i][this.choice],records[i][this.select],this.ref]);
@@ -278,7 +282,8 @@ Filtre.prototype.setup = function(){
                                     baseuri: "/arrestDB/ArrestDB.php/",
                                     table: defrow.table,
                                     choice: defrow.choice,
-                                    assoc: defrow.assoc}),
+                                    assoc: defrow.assoc,
+                                    ajax: this.ajax}),
                          renderItem: function (item, search){
                                 search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
                                 var re = new RegExp("(" + search.split(' ').join('|') + ")", "gi");

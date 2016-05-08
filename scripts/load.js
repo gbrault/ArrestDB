@@ -10,17 +10,37 @@ window.rlite.waitCKEDITOR = function(docref){
 	  setTimeout(window.rlite.waitCKEDITOR,0,docref);
 	}
 };
-
+parseQuery();
 // loading a Document
 document.onreadystatechange = function () {
   if (document.readyState == "complete") {
   	loadHiddenEditor();  	
-  	var docref = window.location.search.substring(1);
-  	if(!docref){
-  		docref = 'rlite';
-  	}
+  	var docref; 
+  	if(typeof window.rlite.vars['docref'] !='undefined'){
+  		docref = window.rlite.vars['docref'];
+  	} else {
+		docref = 'rlite';
+	}
 	window.rlite.waitCKEDITOR(docref);	   
   }
+}
+
+function parseQuery() {
+	var vars = {};
+    var query = window.location.search.substring(1);
+    if (query.length>0){
+	    var pairs = query.split("&amp;");
+	    
+	    for (var i=0;i<pairs.length;i++) {
+	    	if(pairs[i].indexOf('=')>=0){
+	     		var split = pairs[i].split("=");
+	      		vars[split[0]]=split[1];		
+			} else {
+				vars[pairs[i]]=true;
+			}
+	    }		
+	}
+    window.rlite.vars = vars;
 }
 
 function getRandom() {

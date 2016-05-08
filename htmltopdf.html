@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+	</head>
+	<body>
+	<button id='go'>html2pdf</button>
+	<div>
+	<textarea id="source" cols=80 rows=40></textarea>
+	<iframe id="pdf" width="50%" height="600px"></iframe>
+	</div>
+		<script>
+function DomPDF(){
+	this.src = document.getElementById("source");
+	this.pdf = document.getElementById("pdf");
+	this.go = document.getElementById("go");
+	this.ajax = null;   // communication with the server
+    if (window.XMLHttpRequest) {
+    this.ajax = new XMLHttpRequest();
+    } else {
+    // code for IE6, IE5
+    this.ajax = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    go.addEventListener('click',function(event){
+    	var html = this.src.value;
+    	var ajax = this.ajax;
+    	ajax.open("POST", 'htmltopdf.php', true);
+		ajax.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+		ajax.onreadystatechange = function () {//Call a function when the state changes.
+		  if (this.ajax.readyState == 4) {//Ready State will be 4 when the document is loaded.
+					if(this.ajax.status == 200) {
+						var result = "";
+						if(this.ajax.responseText) this.pdf.src = "data:application/pdf;base64,"+this.ajax.responseText;
+					}
+		  }
+		}.bind(this);
+		var content = JSON.stringify({html:html}); 
+		ajax.send(content);	   
+    }.bind(this));
+}
+
+var mDomPDF = new DomPDF();
+
+		</script>
+	</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>CSS Trials</title>
+<style>
+@media print {
+.myPageBreak {		
+		page-break-before: always;
+        padding: 0;
+        margin: 0;
+       border: none;
+}
+}
+@media screen {
+.myPageBreak {		
+   margin: 10px 0 0 0;
+    padding: 10px 0;
+    border-top: 1px dotted #c5c5c5;
+}
+}
+</style>		
+	</head>
+	<body>
+	<div class="myPageBreak"></div>	
+	</body>
+</html>
