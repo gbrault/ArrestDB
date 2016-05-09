@@ -33,8 +33,10 @@ What to produce
     <ul class="links" id="leftmenu"> -> this is given
     <!-- generic commands -->
     <li><a href="#top">Top</a></li>
-    <li><a href="#" onclick='file();'>File</a></li>
     <!-- for user.role == document.role or document.role == ""-->
+    <li><a href="#" onclick='file();'>File</a></li>
+    <li><a href="#" onclick='view();'>View</a></li>
+    <li><a href="#" onclick='print();'>Print</a></li>
     <li>      
       <div class="select-wrapper">
       	<select name="category1" id="<category1>" onchange="navChange(this);">
@@ -115,7 +117,22 @@ What to produce
 		}	
 	    a.onclick=function(a){this.View(a);}.bind(this,a); 
 	    li.appendChild(a);
-	    ul.appendChild(li);	      		
+	    ul.appendChild(li);	
+	    // add the print button
+	    // <li><a href="#" onclick='print();'>Print</a></li>
+	    li = document.createElement("LI");
+	    a = document.createElement("a");
+	    txt = document.createTextNode('Print');
+	    a.appendChild(txt);
+	    a.setAttribute('href','#');
+	    if( (typeof window.user.print === 'undefined') || !window.user.print ){
+			a.setAttribute('class',"button special small fit");
+		} else {
+			a.setAttribute('class',"button alt small fit");
+		}	
+	    a.onclick=function(a){this.Print(a);}.bind(this,a); 
+	    li.appendChild(a);
+	    ul.appendChild(li);		          		
 	}    
     // find categories (distinct categories Alphabetic order)
     var uri = this.baseuri+'Documents?columns=category&distinct&by=category';
@@ -196,6 +213,27 @@ What to produce
     }
 }
 
+Nav.prototype.Print = function(a){
+	if(typeof window.user == 'object'){
+		if (typeof window.user.print != 'undefined'){
+			if(window.user.print){
+				window.user.print=false;
+				a.setAttribute('class','button special small fit');
+			} else {
+				window.user.print=true;
+				a.setAttribute('class','button alt small fit');
+			}
+		} else {
+			window.user.print=true;
+			a.setAttribute('class','button alt small fit');
+		}
+		if (typeof window.user.view != 'undefined'){
+			window.user.view=false;
+		}
+	}
+	PubSub.publish('load',window.rlite.docname);  // reload the document	
+}
+
 Nav.prototype.View =function(a){
 	if(typeof window.user == 'object'){
 		if (typeof window.user.view != 'undefined'){
@@ -209,6 +247,9 @@ Nav.prototype.View =function(a){
 		} else {
 			window.user.view=true;
 			a.setAttribute('class','button alt small fit');
+		}
+		if (typeof window.user.print != 'undefined'){
+			window.user.print = false;
 		}
 	}
 	PubSub.publish('load',window.rlite.docname);  // reload the document
