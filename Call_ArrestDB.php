@@ -99,7 +99,7 @@ function IdColName($table){
 function call_ArrestDB(){
 	
 // $dsn = 'mysql://root@localhost/Northwind/';
-$dsn = 'sqlite://c:/wamp64/www/ArrestDB/Northwind.sqlite';
+$dsn = 'sqlite://C:/Apache24/htdocs/ArrestDB/Northwind.sqlite';
 $clients = [];
 
 if ((empty($clients) !== true) && (in_array($_SERVER['REMOTE_ADDR'], (array) $clients) !== true))
