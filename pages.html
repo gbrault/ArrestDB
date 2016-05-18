@@ -1,0 +1,32 @@
+<html>
+<head>
+  <style>
+  @media screen {
+    body {
+  background-color:grey;
+  }
+  div.out {
+    width:100%;
+    min-height:500px;
+    border-width: 5px;
+    border-style: solid;
+    border-color:grey;
+  }
+  div.out {
+    width:99%;
+    min-height:500px;
+    background-color:white;
+  }
+  }
+  @media print {
+  div.break { page-break-after: always;
+  }
+  }
+  </style>
+</head>
+  <body>
+  <div class="out break"><div class="in"><img src="http://officesnapshots.com/wp-content/uploads/2016/01/instacart-office-design-17-700x479.jpg" height="600"></div></div>
+  <div class="out break"><div class="in"><h1>Page 2</h1></div></div>
+  <div class="out"><div class="in"><h1>Page 3</h1></div></div>
+</body>
+</html>
