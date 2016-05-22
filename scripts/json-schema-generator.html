@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="json-schema-generator.js"></script>
+		<!-- Foundation CSS framework (Bootstrap and jQueryUI also supported) -->
+        <link rel="stylesheet" href="http://cdn.jsdelivr.net/foundation/5.0.2/css/foundation.min.css">
+        <!-- Font Awesome icons (Bootstrap, Foundation, and jQueryUI also supported) -->
+        <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css">
+        <script src="jsoneditor.js"></script>
+		<title>json-schema-generator</title>
+	</head>
+	<body>
+	<button id="submit" class="tiny">Submit (console.log)</button>
+	<div class="row">
+      <div id="editor_holder" class="medium-12 columns">
+      </div>
+    </div>
+		<script>
+		var url='http://rlite.com';
+		var root={uri:'/ArrestDB/',adb:'ArrestDB.php/',adminer:'adminer.php?sqlite=&username=&db=Northwind.sqlite'};
+	    var ajax = null;   // communication with the server
+    	if (window.XMLHttpRequest) {
+    		ajax = new XMLHttpRequest();
+    	} else {
+    	// code for IE6, IE5
+    		ajax = new ActiveXObject("Microsoft.XMLHTTP");
+    	}
+		//sample JSON string. Could also be populated from a textarea or file.
+		var jsonString = '{"test" : "this"}';
+		var uri = root.uri+root.adb+window.location.search.substr(1)+"?limit=1";
+		ajax.open("GET", uri, false);
+        ajax.send(null);
+        if(ajax.status=== 200){
+        	var records = JSON.parse(this.ajax.responseText);
+        	jsonString=records[0];
+        	url = window.location.search.substr(1);
+        }
+
+		//create a new instance of the JSON Schema Generator
+		var generator = new JSONSchemaGenerator({
+		    url: url,
+		    json: jsonString
+		});
+
+		//get the schema object
+		var schemaObj = generator.getSchema();
+
+		//get the formatted schema string.
+		var schemaString = generator.getSchemaAsString(true);
+		console.log(schemaString);
+		
+		var schema = JSON.parse(schemaString);
+		for(var i=0; i< schema.required.length;i++){
+			if(schema.required[i]=="/"){
+				schema.required.splice(i,1);
+			}
+		}
+		// Set the default CSS theme and icon library globally
+        JSONEditor.defaults.theme = 'foundation5';
+        JSONEditor.defaults.iconlib = 'fontawesome4';
+	    var editor = new JSONEditor(document.getElementById('editor_holder'),{       
+        	// The schema for the editor
+        	schema:schema 
+        });
+        // Hook up the submit button to log to the console
+        document.getElementById('submit').addEventListener('click',function() {
+        // Get the value from the editor
+        console.log(editor.getValue());
+        });
+		</script>
+	</body>
+</html>
