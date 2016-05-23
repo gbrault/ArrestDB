@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Testing jsreport</title>
+<script>
+function submitForm()
+{ 
+    var xhr; 
+    try {  xhr = new ActiveXObject('Msxml2.XMLHTTP');   }
+    catch (e) 
+    {
+        try {   xhr = new ActiveXObject('Microsoft.XMLHTTP'); }
+        catch (e2) 
+        {
+           try {  xhr = new XMLHttpRequest();  }
+           catch (e3) {  xhr = false;   }
+         }
+    }
+  
+    xhr.onreadystatechange  = function() 
+    { 
+       if(xhr.readyState  == 4)
+       {
+       	var pdf = document.getElementById('pdf');
+       	var div = document.getElementById('result');
+        if(xhr.status  == 200) {
+        	if(xhr.response.type=='application/pdf'){
+        		  var blob = new Blob([this.response], {type: 'application/pdf'});
+        		  var url = URL.createObjectURL(blob);
+        		  pdf.src = url;
+        		  pdf.style.display='inherit';
+        		  div.style.display='none';
+            } else if (xhr.response.type=='text/html'){
+            	// http://www.javascripture.com/Blob
+            	 var blob = new Blob([this.response], { type: 'plain/text'});
+  				 var reader = new FileReader();
+  				reader.onload = function(event){
+    					                div.innerHTML=reader.result;
+  								};
+  				reader.readAsText(blob);
+            	pdf.style.display='none';
+            	div.style.display='inherit';
+            }        	
+        }
+        else
+            console.log("Error code " + xhr.status);
+        }
+    }; 
+ 
+   xhr.open( "POST", "http://localhost:3000/api/report",  true); 
+   xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+   xhr.responseType = 'blob';
+   var post = document.getElementById("post");
+   xhr.send(post.value); 
+} 
+</script>
+	</head>
+	<body>
+</head>
+  
+<body>
+<INPUT type="BUTTON" value="Submit"  ONCLICK="submitForm()">
+   <div>
+    <textarea cols="80" rows="20" id="post">
+{ 
+ "template": { "shortid" : "4kzkHKcG-" },
+ "data":
+{
+    "items": [
+        { "category": "labor", "qty": 3, "price": 80, "name": "Set up and configure website" },
+        { "category": "labor", "qty": 2, "price": 100, "name": "Graphic Design" },
+        { "category": "material", "qty": 1, "price": 1000, "name": "Desktop computer" },
+        { "category": "material", "qty": 2, "price": 500, "name": "iPad" }
+    ]   
+}
+}
+    </textarea>
+    <div id="result"></div>
+    <iframe id="pdf" width="50%" height="600px"></iframe>
+    </div>
+    <script>
+      (function(){
+        var pdf = document.getElementById('pdf');
+       	var div = document.getElementById('result');
+       	pdf.style.display='none';
+        div.style.display='none';
+      })();    	
+    </script>
+</body>		
+</html>
