@@ -33,7 +33,7 @@ SELECT '{' ||
 (
   SELECT '"order":{"OrderDate":"'||"OrderDate" || '","IdOrder":"' || "IdOrder" || '","ShipName":"' || "ShipName" || '"}' || ',"customer":' ||
   (
-    SELECT '{ "CompanyName":"' || CompanyName || '","ContactName":"' || ContactName || '"}' FROM Customer WHERE Customer.IdCustomer=b.IdCustomer
+    SELECT '{ "CompanyName":"' || CompanyName || '","ContactName":"' || ContactName || '"}' FROM Customer AS a WHERE a.IdCustomer=b.IdCustomer
   ) || (
     SELECT ',"lines":[' || GROUP_CONCAT("record",',') ||']' FROM(
           SELECT '{"UnitPrice":'||UnitPrice || ',"Quantity":' || Quantity||',"product":{' || (
