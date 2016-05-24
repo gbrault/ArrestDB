@@ -1,0 +1,32 @@
+{"invoice":
+  [
+	"Order":{	
+				"table":"Order",
+				"columns":["OrderDate","ShipDate","ShipName","ShipAddress","ShipCity","Country"],
+				"where":"Order.IdOrder={{OrderNumber}}",
+				"id":"IdOrder"
+			},
+	"Customer":{
+				"table":"Customer",
+				"columns":["CompanyName","ContactName","Address","City","PostalCode","Country","Phone"],
+				"where":"Order.IdCustomer=Customer.IdCustomer",
+				"id":"IdCustomer"
+			},
+	"OrderDetail":{
+					"table":"OrderDetail",
+					"columns":[
+								"UnitPrice",
+								"Quantity",
+								"Discount",
+								{
+									"Product":{
+												"table":"Product",
+												"columns":["ProductName","QuantityPerUnit"],
+												"where":"Product.IdProduct=OrderDetail.IdProduct"},
+												"id":"idProduct"
+												}
+							  ],
+				    "where":"Order.IdOrder=OrderDetail.IdOrder","id":"idOrderDetail"
+				  }
+  ]
+}
