@@ -11,3 +11,40 @@ Configuring IIS
 How to embedd a DOCX document in a site
 - http://view.officeapps.live.com/op/view.aspx?src=http://pharmacie.univ-amu.fr/sites/pharmacie.univ-amu.fr/files/public/prog_detaille_ue6_ok-4.docx
 - <iframe src='https://view.officeapps.live.com/op/embed.aspx?src=http%3A%2F%2Fpharmacie%2Euniv%2Damu%2Efr%3A80%2Fsites%2Fpharmacie%2Euniv%2Damu%2Efr%2Ffiles%2Fpublic%2Fprog%5Fdetaille%5Fue6%5Fok%2D4%2Edocx&wdStartOn=1' width='476px' height='288px' frameborder='0'>This is an embedded <a target='_blank' href='https://office.com'>Microsoft Office</a> document, powered by <a target='_blank' href='https://office.com/webapps'>Office Online</a>.</iframe>
+
+Generate json from SQL
+
+SELECT '{"customers":[' || GROUP_CONCAT("record",',') || ']}' AS result FROM (
+SELECT '{ "CompanyName":"' || CompanyName || '","ContactName":"' || ContactName || '"}' AS "record"
+FROM "Customer" WHERE ContactName LIKE 'MA%')
+
+SELECT '{' ||
+(SELECT '"Order":{ "OrderDate":"' || "OrderDate" || '","ShipName":' || "ShipName" || '"}' AS "record"
+FROM "Order"
+WHERE IdOrder=10248)
+|| '}' AS invoice
+
+===============================================================================================
+
+invoice
+=======
+
+SELECT '{' ||
+(
+  SELECT '"order":{"OrderDate":"'||"OrderDate" || '","IdOrder":"' || "IdOrder" || '","ShipName":"' || "ShipName" || '"}' || ',"customer":' ||
+  (
+    SELECT '{ "CompanyName":"' || CompanyName || '","ContactName":"' || ContactName || '"}' FROM Customer WHERE Customer.IdCustomer=b.IdCustomer
+  ) || (
+    SELECT ',"lines":[' || GROUP_CONCAT("record",',') ||']' FROM(
+          SELECT '{"UnitPrice":'||UnitPrice || ',"Quantity":' || Quantity||',"product":{' || (
+               SELECT '"ProductName":"' || "ProductName" || '"' || ',"QuantityPerUnit":"' || "QuantityPerUnit" || '"'
+               FROM Product WHERE Product.IdProduct = c.IdProduct
+          )||'}}' AS record
+          FROM OrderDetail AS c WHERE c.IdOrder=b.IdOrder
+    )
+  )
+) || '}'AS invoice
+FROM "Order" AS b
+WHERE IdOrder=10248
+
+===============================================================================================
