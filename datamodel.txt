@@ -7,7 +7,6 @@
 					"customer":{
 						"columns":[
 							"CompanyName",
-							"ContactName",
 							"ContactName"
 						],
 						"from": "Customer AS a",
