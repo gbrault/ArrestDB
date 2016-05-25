@@ -1,3 +1,6 @@
+input
+=====
+
 {
 	"order":{
 			"columns":	[
@@ -7,6 +10,7 @@
 					"customer":{
 						"columns":[
 							"CompanyName",
+							"ContactName",
 							"ContactName"
 						],
 						"from": "Customer AS a",
