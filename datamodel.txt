@@ -1,3 +1,108 @@
+{
+	"order":{
+			"columns":	[
+					"OrderDate",
+					"IdOrder",
+					"ShipName",
+					"customer":{
+						"columns":[
+							"CompanyName",
+							"ContactName",
+							"ContactName"
+						],
+						"from": "Customer AS a",
+						"where": "a.IdCustomer=b.IdCustomer",
+						"arity": "1"
+					},
+					"lines":{
+						"columns":[
+							"UnitPrice",
+							"Quantity",
+							"product":{
+								"columns":[
+									"ProductName",
+									"QuantityPerUnit"
+								],
+								"from": "Product as d"
+								"where": "d.IdProduct = c.IdProduct"
+								"arity":"1"
+							}
+						],
+						"from": "OrderDetail AS c",
+						"where": "c.IdOrder=b.IdOrder",
+						"arity": "n"
+					}
+				],
+			"from": "Order as b",
+			"where": "IdOrder=10248"
+			"arity": "1"
+	}
+}
+
+
+generated SQL query
+===================
+SELECT '{' ||
+(
+  SELECT '"order":{"OrderDate":"'||"OrderDate" || '","IdOrder":"' || "IdOrder" || '","ShipName":"' || "ShipName" || '"}' || ',"customer":' ||
+  (
+    SELECT '{ "CompanyName":"' || CompanyName || '","ContactName":"' || ContactName || '"}' FROM Customer AS a WHERE a.IdCustomer=b.IdCustomer
+  ) || (
+    SELECT ',"lines":[' || GROUP_CONCAT("record",',') ||']' FROM(
+          SELECT '{"UnitPrice":'||UnitPrice || ',"Quantity":' || Quantity||',"product":{' || (
+               SELECT '"ProductName":"' || "ProductName" || '"' || ',"QuantityPerUnit":"' || "QuantityPerUnit" || '"'
+               FROM Product as d WHERE d.IdProduct = c.IdProduct
+          )||'}}' AS record
+          FROM OrderDetail AS c WHERE c.IdOrder=b.IdOrder
+    )
+  )
+) || '}'AS invoice
+FROM "Order" AS b
+WHERE IdOrder=10248
+
+
+output
+======
+{  
+   "order":{  
+      "OrderDate":"1996-07-04",
+      "IdOrder":"10248",
+      "ShipName":"Vins et alcools Chevalier"
+   },
+   "customer":{  
+      "CompanyName":"Vins et alcools Chevalier",
+      "ContactName":"Paul Henriot"
+   },
+   "lines":[  
+      {  
+         "UnitPrice":14,
+         "Quantity":12,
+         "product":{  
+            "ProductName":"Queso Cabrales",
+            "QuantityPerUnit":"1 kg pkg."
+         }
+      },
+      {  
+         "UnitPrice":9.8,
+         "Quantity":10,
+         "product":{  
+            "ProductName":"Singaporean Hokkien Fried Mee",
+            "QuantityPerUnit":"32 - 1 kg pkgs."
+         }
+      },
+      {  
+         "UnitPrice":34.8,
+         "Quantity":5,
+         "product":{  
+            "ProductName":"Mozzarella di Giovanni",
+            "QuantityPerUnit":"24 - 200 g pkgs."
+         }
+      }
+   ]
+}
+
+Original idea
+=============
 {"invoice":
   [
 	"Order":{	
