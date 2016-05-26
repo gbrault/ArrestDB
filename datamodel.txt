@@ -1,13 +1,12 @@
 input
 =====
-
 {
 	"order":{
 			"columns":	[
 					"OrderDate",
 					"IdOrder",
 					"ShipName",
-					"customer":{
+					{"customer":{
 						"columns":[
 							"CompanyName",
 							"ContactName",
@@ -16,28 +15,28 @@ input
 						"from": "Customer AS a",
 						"where": "a.IdCustomer=b.IdCustomer",
 						"arity": "1"
-					},
-					"lines":{
+					}},
+					{"lines":{
 						"columns":[
 							"UnitPrice",
 							"Quantity",
-							"product":{
+							{"product":{
 								"columns":[
 									"ProductName",
 									"QuantityPerUnit"
 								],
-								"from": "Product as d"
-								"where": "d.IdProduct = c.IdProduct"
+								"from": "Product as d",
+								"where": "d.IdProduct = c.IdProduct",
 								"arity":"1"
-							}
+							}}
 						],
 						"from": "OrderDetail AS c",
 						"where": "c.IdOrder=b.IdOrder",
 						"arity": "n"
-					}
+					}}
 				],
 			"from": "Order as b",
-			"where": "IdOrder=10248"
+			"where": "IdOrder=10248",
 			"arity": "1"
 	}
 }
