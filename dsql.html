@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">		
+	    <script src="scripts/codemirror-compressed.js"></script>
+	    <link rel="stylesheet" href="scripts/codemirror.css" />
+	    <script src="scripts/formatting.js"></script>
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.1.1/normalize.css" />
+		<title>SQL Direct</title>
+	</head>
+	<body>
+	<h1>SQLon test page</h1>
+	    <H2>SQLon</H2>
+	    <button id="bsqlon">parse</button><br>
+		<textarea id="tsqlon" cols="80" rows="20">
+{
+	"order":{
+			"columns":	[
+					"OrderDate",
+					"IdOrder",
+					"ShipName",
+					{"customer":{
+						"columns":[
+							"CompanyName",
+							"ContactName",
+							"ContactName"
+						],
+						"type": "SELECT",
+						"from": "Customer",
+						"as": "a",
+						"where": "a.IdCustomer=b.IdCustomer",
+						"arity": "1"
+					}},
+					{"lines":{
+						"columns":[
+							"UnitPrice",
+							"Quantity",
+							{"product":{
+								"columns":[
+									"ProductName",
+									"QuantityPerUnit"
+								],
+								"type": "SELECT",
+								"from": "Product",
+								"as": "d",
+								"where": "d.IdProduct = c.IdProduct",
+								"arity":"1"
+							}}
+						],
+						"type": "SELECT",
+						"from": "OrderDetail",
+						"as" :"c",
+						"where": "c.IdOrder=b.IdOrder",
+						"arity": "n"
+					}}
+				],
+			"type": "SELECT",
+			"from": "Order",
+			"as": "b",
+			"where": "IdOrder=10248",
+			"arity": "1"
+	}
+}
+
+		</textarea>	    
+	    <H2>SQL Direct</H2>
+	    <button id="bsql">send</button><br>
+		<textarea id="tsql" cols="80" rows="20">SELECT * FROM Customer</textarea>
+		<h2>Result</h2>
+		<textarea id="rsql"></textarea>
+		<script>
+			var mime ='text/x-sql';
+		    var uri = window.location.origin+"/ArrestDB/arrestDBdirect.php";
+			var bsqlon = document.getElementById("bsqlon");
+			var tsqlon = document.getElementById("tsqlon");
+			var bsql = document.getElementById("bsql");
+			var tsql = document.getElementById("tsql");
+			var rsql = document.getElementById("rsql");
+            var editor_e = CodeMirror.fromTextArea(tsqlon, {
+	        	matchBrackets: true,
+	        	autoCloseBrackets: true,
+	        	jsonld: true,
+	        	lineNumbers: true,
+	        	mode: "application/ld+json",
+	        	lineWrapping: true
+            });
+            var editor = CodeMirror.fromTextArea(tsql, {
+				mode: mime,
+				indentWithTabs: true,
+				smartIndent: true,
+				lineNumbers: true,
+				matchBrackets : true,
+				autofocus: true,
+				extraKeys: {"Ctrl-Space": "autocomplete"}
+            });
+            var editor_r = CodeMirror.fromTextArea(rsql, {
+	        	matchBrackets: true,
+	        	autoCloseBrackets: true,
+	        	jsonld: true,
+	        	lineNumbers: true,
+	        	mode: "application/ld+json",
+	        	lineWrapping: true
+            });
+		    var ajax = null;   // communication with the server
+		    if (window.XMLHttpRequest) {
+		      ajax = new XMLHttpRequest();
+		    } else {
+		      // code for IE6, IE5
+		      ajax = new ActiveXObject("Microsoft.XMLHTTP");
+		    }
+		    var mSQLon = new SQLon();
+		    bsqlon.addEventListener('click', function(event) {
+		    	mSQLon.parse(editor_e.getValue(),'"result"')
+		    	editor.setValue(mSQLon.result);
+		    });
+			bsql.addEventListener('click', function(event) {			
+				ajax.open("POST", uri, false);
+				ajax.setRequestHeader("Content-type", 
+                             "application/json");
+                ajax.send(JSON.stringify(editor.getValue()));
+                editor_r.setValue(ajax.responseText);
+                var start = editor_r.firstLine(), end = editor_r.lastLine();
+        		editor_r.autoFormatRange({line:start,ch:0},{line:end+1,ch:0});        
+			});
+			/* SQLon ===========================================================*/
+			function SQLon(){
+				this.version="0.0";
+				this.result="";				
+			}
+			SQLon.prototype.parse = function(input,attribute){				
+				var jInput = JSON.parse(input);
+				this.result="";
+				this.innerparse(jInput,attribute);
+			}
+			
+			SQLon.prototype.innerparse = function(input,attribute){
+				var keys = Object.keys(input);
+				if(keys.length==1){
+					switch(input[keys[0]].type){
+						case "SELECT":
+						    this.result += "SELECT '{' ||\n(\n";
+						    this.select(input[keys[0]],keys[0]);
+						    this.result += ") || '}' AS "+attribute+"\n"
+						    this.result += 'FROM "'+ input[keys[0]].from+'"'+' AS '+input[keys[0]].as+'\n';
+						    this.result += 'WHERE '+input[keys[0]].where+'\n';
+							break;
+						default:
+						    ;  // this is an error
+					}
+				}
+			}
+			
+			SQLon.prototype.select = function(input,attribute){
+				switch(input.arity){
+					case "1":
+					   this.select1(input,attribute);
+					   break;
+					case "n":
+					   this.selectn(input,attribute);
+					   break;
+					default:
+					        ;   // this is an error				
+				}
+			}
+			
+			SQLon.prototype.select1 = function(input,attribute){
+				this.result += "SELECT '\""+attribute+"\":{' || ";
+				for(var i=0; i< input.columns.length; i++){
+					if (typeof(input.columns[i])=='string'){
+							// add a column
+							this.result += "'\""+ input.columns[i] +"\":'"+' || "'+input.columns[i]+'"';
+						if(i==input.columns.length){
+							break;
+						} else {
+							this.result += ' || "," || ';
+						}
+					}
+				}
+				this.result += "'}'\n";
+			}
+			
+			SQLon.prototype.selectn = function(input,attribute){
+			}
+			
+			/* SQLon ===========================================================*/
+		</script>
+	</body>
+</html>
