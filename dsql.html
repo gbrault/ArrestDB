@@ -112,6 +112,9 @@
 		    bsqlon.addEventListener('click', function(event) {
 		    	mSQLon.parse(editor_e.getValue(),'"result"')
 		    	editor.setValue(mSQLon.result);
+		    	var start = editor.firstLine(), end = editor.lastLine();
+        		editor.autoFormatRange({line:start,ch:0},{line:end+1,ch:0});        
+
 		    });
 			bsql.addEventListener('click', function(event) {			
 				ajax.open("POST", uri, false);
@@ -130,19 +133,24 @@
 			SQLon.prototype.parse = function(input,attribute){				
 				var jInput = JSON.parse(input);
 				this.result="";
-				this.innerparse(jInput,attribute);
+				var keys = Object.keys(jInput);
+				if(keys.length==1){
+					switch(jInput[keys[0]].type){
+						case "SELECT":
+							this.result += "SELECT '{' || (\n";
+							this.select(jInput[keys[0]],keys[0]);
+							this.result += "\n) || '}' AS "+attribute+"\n";
+							break;
+					}		
+				}
 			}
 			
-			SQLon.prototype.innerparse = function(input,attribute){
+			SQLon.prototype.innerparse = function(input){
 				var keys = Object.keys(input);
 				if(keys.length==1){
 					switch(input[keys[0]].type){
 						case "SELECT":
-						    this.result += "SELECT '{' ||\n(\n";
 						    this.select(input[keys[0]],keys[0]);
-						    this.result += ") || '}' AS "+attribute+"\n"
-						    this.result += 'FROM "'+ input[keys[0]].from+'"'+' AS '+input[keys[0]].as+'\n';
-						    this.result += 'WHERE '+input[keys[0]].where+'\n';
 							break;
 						default:
 						    ;  // this is an error
@@ -150,36 +158,72 @@
 				}
 			}
 			
-			SQLon.prototype.select = function(input,attribute){
+			SQLon.prototype.select = function(input,key){
 				switch(input.arity){
 					case "1":
-					   this.select1(input,attribute);
+					   this.select1(input,key);
 					   break;
 					case "n":
-					   this.selectn(input,attribute);
+					   this.selectn(input,key);
 					   break;
 					default:
 					        ;   // this is an error				
 				}
 			}
 			
-			SQLon.prototype.select1 = function(input,attribute){
-				this.result += "SELECT '\""+attribute+"\":{' || ";
+			SQLon.prototype.select1 = function(input,key){
+				this.result += "(\nSELECT '\""+key+"\":{' || ";
 				for(var i=0; i< input.columns.length; i++){
 					if (typeof(input.columns[i])=='string'){
 							// add a column
-							this.result += "'\""+ input.columns[i] +"\":'"+' || "'+input.columns[i]+'"';
-						if(i==input.columns.length){
-							break;
+							this.result += "'\""+ input.columns[i] +"\":\"'"+' || "'+input.columns[i]+'"';
+						if(i==input.columns.length-1){
+							this.result += " || '\"' ";
 						} else {
-							this.result += ' || "," || ';
+							this.result += " || '\",' || ";
 						}
+					} else if (typeof(input.columns[i])=='object'){
+						this.innerparse(input.columns[i]);
+						if(i==input.columns.length-1){
+							this.result += "  ";
+						} else {
+							this.result += " || ',' || ";
+						}					
 					}
 				}
-				this.result += "'}'\n";
+				this.result += "|| '}'\n";
+				this.result += 'FROM "'+ input.from+'"'+' AS '+input.as+'\n';
+				this.result += 'WHERE '+input.where+'\n';
+				this.result += ")\n";
+ 
 			}
 			
-			SQLon.prototype.selectn = function(input,attribute){
+			SQLon.prototype.selectn = function(input,key){
+				this.result += "(\nSELECT '\""+key+"\":[' || GROUP_CONCAT("+key+"s"+",',') ||']'  FROM ( \n";
+				this.result += "SELECT '{' ||";
+				for(var i=0; i< input.columns.length; i++){
+					if (typeof(input.columns[i])=='string'){
+							// add a column
+							this.result += "'\""+ input.columns[i] +"\":\"'"+' || "'+input.columns[i]+'"';
+						if(i==input.columns.length-1){
+							this.result += " || '\"' ";
+						} else {
+							this.result += " || '\",' || ";
+						}
+					} else if (typeof(input.columns[i])=='object'){
+						this.innerparse(input.columns[i]);
+						if(i==input.columns.length-1){
+							this.result += "  ";
+						} else {
+							this.result += " || ',' || ";
+						}					
+					}
+				}
+				this.result += " || '}' ";
+				this.result += "AS "+key+"s"+"\n";
+				this.result += 'FROM "'+ input.from+'"'+' AS '+input.as+'\n';
+				this.result += 'WHERE '+input.where+'\n';
+				this.result += ")\n)\n";
 			}
 			
 			/* SQLon ===========================================================*/

@@ -17,7 +17,7 @@ if(!isset($_SESSION['user'])){
 	}
 }
 
-$dsn = 'sqlite://C:/Users/sesa33795/ArrestDB/Northwind.sqlite';
+$dsn = 'sqlite://C:/Users/gbrau/git/ArrestDB/Northwind.sqlite';
 $clients = [];
 
 if (ArrestDB::Query($dsn) === false)
@@ -51,11 +51,15 @@ else if (empty($result) === true)
 $count = count($result);
 
 if ($count==1){
-    $colcount = count($result[0]);
-    if($colcount==1){
-		foreach($result[0] as $key => $value){
-			echo $value;
-		} 
+	if(!isset($result['error'])){
+		$colcount = count($result[0]);
+	    if($colcount==1){
+			foreach($result[0] as $key => $value){
+				echo $value;
+			} 
+		} else {
+			echo ArrestDB::Reply($result);
+		}
 	} else {
 		echo ArrestDB::Reply($result);
 	}
