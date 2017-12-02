@@ -15,9 +15,11 @@ if(!isset($_SESSION['user'])){
 			(($_SERVER['REMOTE_ADDR']=='::1')||($_SERVER['REMOTE_ADDR']=='127.0.0.1'))){
 		    $ok=true;
 	}
+	/*
 	if (!$ok){
 		exit(ArrestDB::Reply(ArrestDB::$HTTP[302]));	
 	}
+	*/
 }
 
 $result = Call_ArrestDB();

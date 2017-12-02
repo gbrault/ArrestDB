@@ -17,7 +17,7 @@ if(!isset($_SESSION['user'])){
 	}
 }
 
-$dsn = 'sqlite://C:/Users/gbrau/git/ArrestDB/Northwind.sqlite';
+$dsn = 'sqlite://C:/inetpub/wwwroot/ArrestDB/Northwind.sqlite';
 $clients = [];
 
 if (ArrestDB::Query($dsn) === false)
